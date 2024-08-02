@@ -1,10 +1,19 @@
-mod icons;
+mod widgets;
+
+use crate::widgets::icon;
 
 use iced::{
     widget::{container, row},
     Command, Element,
 };
 use iced_layershell::{reexport::Anchor, settings::LayerShellSettings, Application};
+
+pub const SF_PRO: iced::Font = iced::Font {
+    family: iced::font::Family::Name("SF Pro Rounded"),
+    weight: iced::font::Weight::Normal,
+    stretch: iced::font::Stretch::Normal,
+    style: iced::font::Style::Normal,
+};
 
 struct Bar;
 
@@ -17,7 +26,7 @@ enum Message {
     OpenCalendar,
     CloseCalendar,
     OpenNotificationsCenter,
-    CloseNotificationsCenter
+    CloseNotificationsCenter,
 }
 
 impl Application for Bar {
@@ -50,7 +59,7 @@ impl Application for Bar {
         let formatted_date = date.format("%a %d %I:%M %p");
         let date_display = iced::widget::text(formatted_date);
 
-        let left_section = container("Apps")
+        let left_section = container("")
             .width(iced::Length::Fill)
             .align_x(iced::alignment::Horizontal::Left);
 
@@ -58,18 +67,22 @@ impl Application for Bar {
             .width(iced::Length::Fill)
             .align_x(iced::alignment::Horizontal::Center);
 
-        let right_section = container(row![
-            icons::battery_indicator(),
-            icons::wifi_indicator(),
-            date_display,
-            icons::bell_icon()
-        ].spacing(20))
+        let right_section = container(
+            row![
+                icon::battery_indicator(),
+                icon::wifi_indicator(),
+                date_display,
+                icon::bell_icon()
+            ]
+            .spacing(20),
+        )
         .width(iced::Length::Fill)
         .align_x(iced::alignment::Horizontal::Right);
 
         container(row![left_section, center_section, right_section])
             .padding([0, 8, 0, 8])
             .width(iced::Length::Fill)
+            .height(iced::Length::Fill)
             .style(container::Appearance {
                 text_color: Some(iced::Color::from_rgb(1.0, 1.0, 1.0)),
                 background: Some(iced::Background::Color(iced::Color::from_rgb(
@@ -83,8 +96,9 @@ impl Application for Bar {
 
 fn main() -> Result<(), iced_layershell::Error> {
     Bar::run(iced_layershell::settings::Settings {
+        default_font: SF_PRO,
         layer_settings: LayerShellSettings {
-            size: Some((0, 40)),
+            size: Some((0, 60)),
             exclusize_zone: 40,
             anchor: Anchor::Top | Anchor::Left | Anchor::Right,
             ..Default::default()
