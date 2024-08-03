@@ -1,13 +1,13 @@
-mod appearance;
-mod panels;
-mod widgets;
+mod panel;
+mod styling;
+mod widget;
 
-use crate::panels::control_center::ControlCenter;
-use crate::widgets::icon;
+use crate::panel::control_center::ControlCenter;
+use crate::widget::icon;
 
 use iced::{
-    widget::{container, row, svg, tooltip},
-    Command, Element, Renderer,
+    widget::{container, row},
+    Command, Element,
 };
 use iced_layershell::{reexport::Anchor, settings::LayerShellSettings, Application};
 
@@ -28,7 +28,7 @@ enum Message {
 impl Application for Bar {
     type Message = Message;
     type Flags = ();
-    type Theme = appearance::theme::Theme;
+    type Theme = styling::theme::Theme;
     type Executor = iced::executor::Default;
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
@@ -84,7 +84,7 @@ impl Application for Bar {
 
 fn main() -> Result<(), iced_layershell::Error> {
     Bar::run(iced_layershell::settings::Settings {
-        default_font: appearance::theme::fonts::SF_PRO,
+        default_font: styling::font::SF_PRO,
         layer_settings: LayerShellSettings {
             size: Some((0, 60)),
             exclusize_zone: 40,
