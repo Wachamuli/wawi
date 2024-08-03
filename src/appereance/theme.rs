@@ -1,6 +1,5 @@
 use iced::{border, Border, Color};
 
-
 #[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Theme {
     #[default]
@@ -13,8 +12,9 @@ pub struct Palette {
     pub foreground: Color,
     pub primary: Color,
     pub secondary: Color,
-    pub surface: Color,
-    pub error: Color,
+    pub tertiary: Color,
+    pub accent: Color,
+    pub text: Color,
     pub border: Border,
 }
 
@@ -27,9 +27,9 @@ impl Theme {
                 foreground: Color::WHITE,
                 primary: Color::BLACK,
                 secondary: Color::WHITE,
-                surface: Color::WHITE,
-                error: Color::WHITE,
-
+                tertiary: Color::WHITE,
+                accent: Color::WHITE,
+                text: Color::WHITE,
                 border: Border {
                     color: Color::WHITE,
                     radius: border::Radius::from(10),

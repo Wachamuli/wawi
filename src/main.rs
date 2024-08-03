@@ -6,8 +6,8 @@ use crate::panels::control_center::ControlCenter;
 use crate::widgets::icon;
 
 use iced::{
-    widget::{container, row},
-    Command, Element,
+    widget::{container, row, svg, tooltip},
+    Command, Element, Renderer,
 };
 use iced_layershell::{reexport::Anchor, settings::LayerShellSettings, Application};
 
@@ -28,8 +28,8 @@ enum Message {
 impl Application for Bar {
     type Message = Message;
     type Flags = ();
-    type Theme = iced::Theme;
-    // type Theme = appereance::theme::Theme;
+    // type Theme = iced::Theme;
+    type Theme = appereance::theme::Theme;
     type Executor = iced::executor::Default;
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
@@ -52,14 +52,10 @@ impl Application for Bar {
     }
 
     fn view(&self) -> Element<Message, Self::Theme> {
-        let datetime = {
-            let now = chrono::Utc::now();
-            now.format("%a %d %I:%M %p")
-        };
+        // let datetime = chrono::Utc::now().format("%a %d %I:%M %p");
+        // let date_display = iced::widget::text(datetime);
 
-        let date_display = iced::widget::text(datetime);
-
-        let left_section = container("")
+        let left_section = container("Apps")
             .width(iced::Length::Fill)
             .align_x(iced::alignment::Horizontal::Left);
 
@@ -69,10 +65,10 @@ impl Application for Bar {
 
         let right_section = container(
             row![
-                icon::battery_indicator(),
-                icon::wifi_indicator(),
-                date_display,
-                icon::bell_icon()
+                // icon::battery_indicator(),
+                // icon::wifi_indicator(),
+                // date_display,
+                // icon::bell_icon()
             ]
             .spacing(20),
         )
@@ -80,15 +76,10 @@ impl Application for Bar {
         .align_x(iced::alignment::Horizontal::Right);
 
         container(row![left_section, center_section, right_section])
-            .padding([0, 8, 0, 8])
             .width(iced::Length::Fill)
-            // .height(iced::Length::Fill)
-            .style(container::Appearance {
-                text_color: Some(iced::Color::from_rgb(1.0, 1.0, 1.0)),
-                background: Some(iced::Background::Color(iced::Color::BLACK)),
-                ..Default::default()
-            }).into()
-
+            .padding([0, 8, 0, 8])
+            .height(iced::Length::Fill)
+            .into()
     }
 }
 

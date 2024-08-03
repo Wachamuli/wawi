@@ -1,5 +1,3 @@
 pub struct ControlCenter;
 
-impl ControlCenter {
-
-}
+impl ControlCenter {}
