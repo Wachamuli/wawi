@@ -1,4 +1,4 @@
-mod appereance;
+mod appearance;
 mod panels;
 mod widgets;
 
@@ -28,8 +28,7 @@ enum Message {
 impl Application for Bar {
     type Message = Message;
     type Flags = ();
-    // type Theme = iced::Theme;
-    type Theme = appereance::theme::Theme;
+    type Theme = appearance::theme::Theme;
     type Executor = iced::executor::Default;
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
@@ -52,8 +51,8 @@ impl Application for Bar {
     }
 
     fn view(&self) -> Element<Message, Self::Theme> {
-        // let datetime = chrono::Utc::now().format("%a %d %I:%M %p");
-        // let date_display = iced::widget::text(datetime);
+        let datetime = chrono::Utc::now().format("%a %d %I:%M %p");
+        let date_display = iced::widget::text(datetime);
 
         let left_section = container("Apps")
             .width(iced::Length::Fill)
@@ -67,7 +66,7 @@ impl Application for Bar {
             row![
                 // icon::battery_indicator(),
                 // icon::wifi_indicator(),
-                // date_display,
+                date_display,
                 // icon::bell_icon()
             ]
             .spacing(20),
@@ -85,7 +84,7 @@ impl Application for Bar {
 
 fn main() -> Result<(), iced_layershell::Error> {
     Bar::run(iced_layershell::settings::Settings {
-        default_font: appereance::theme::fonts::SF_PRO,
+        default_font: appearance::theme::fonts::SF_PRO,
         layer_settings: LayerShellSettings {
             size: Some((0, 60)),
             exclusize_zone: 40,

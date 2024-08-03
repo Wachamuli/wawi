@@ -1,4 +1,4 @@
-use crate::appereance;
+use crate::appearance;
 
 use super::hint::hint;
 
@@ -7,7 +7,7 @@ use iced::{
     Element,
 };
 
-pub fn icon(bytes: &'static [u8]) -> Svg<appereance::theme::Theme> {
+pub fn icon(bytes: &'static [u8]) -> Svg<appearance::theme::Theme> {
     const ICON_SIZE: u16 = 20;
 
     svg(svg::Handle::from_memory(bytes))
