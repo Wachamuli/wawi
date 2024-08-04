@@ -3,7 +3,7 @@ mod panel;
 mod styling;
 mod widget;
 
-use binding::upower::DeviceProxy;
+use panel::control_center::ControlCenter;
 use widget::icon::icon;
 
 use iced::{
@@ -22,6 +22,7 @@ struct Bar {
 enum Message {
     BatteryState(zbus::Result<f64>),
     OpenControlCenter,
+    CloseControlCenter,
 }
 
 impl iced_layershell::Application for Bar {
@@ -50,8 +51,24 @@ impl iced_layershell::Application for Bar {
 
                 Command::none()
             }
-            Message::OpenControlCenter => Command::none(),
-            // Message::CloseControlCenter => Command::none(),
+            Message::OpenControlCenter => {
+                ControlCenter::run(iced_layershell::settings::Settings {
+                    antialiasing: true,
+                    default_font: styling::font::SF_PRO,
+                    layer_settings: iced_layershell::settings::LayerShellSettings {
+                        layer: iced_layershell::reexport::Layer::Overlay,
+                        anchor: Anchor::Right | Anchor::Top,
+                        margins: (45, 10, 0, 0),
+                        size: Some((500, 400)),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .expect("Don't crash, please.");
+
+                iced::Command::none()
+            }
+            Message::CloseControlCenter => iced::window::close(iced::window::Id::MAIN),
             // Message::OpenCalendar => todo!(),
             // Message::CloseCalendar => todo!(),
             // Message::OpenNotificationsCenter => todo!(),
@@ -79,11 +96,12 @@ impl iced_layershell::Application for Bar {
                     tooltip::Position::Bottom
                 ))
                 .on_press(Message::OpenControlCenter),
-                tooltip(
+                button(tooltip(
                     icon(include_bytes!("../assets/icons/wififull.svg")),
                     "Connected to Crisel22",
                     tooltip::Position::Bottom
-                ),
+                ))
+                .on_press(Message::CloseControlCenter),
                 date_display,
                 tooltip(
                     icon(include_bytes!("../assets/icons/bell.svg")),
@@ -114,6 +132,7 @@ async fn battery_state<'a>() -> zbus::Result<f64> {
 
 fn main() -> Result<(), iced_layershell::Error> {
     Bar::run(iced_layershell::settings::Settings {
+        antialiasing: true,
         default_font: styling::font::SF_PRO,
         layer_settings: iced_layershell::settings::LayerShellSettings {
             size: Some((0, 60)),

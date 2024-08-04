@@ -54,8 +54,6 @@ impl container::StyleSheet for Theme {
 pub enum Text {
     #[default]
     Paragraph,
-    Header,
-    Subheader,
 }
 
 impl text::StyleSheet for Theme {
@@ -66,8 +64,6 @@ impl text::StyleSheet for Theme {
             Text::Paragraph => text::Appearance {
                 color: Some(self.palette().text),
             },
-            Text::Header => todo!(),
-            Text::Subheader => todo!(),
         }
     }
 }
@@ -95,8 +91,8 @@ impl svg::StyleSheet for Theme {
 #[derive(Default, Debug, Clone, Copy)]
 pub enum Button {
     #[default]
-    Primary,
-    Secondary
+    Default,
+    Circular,
 }
 
 impl button::StyleSheet for Theme {
@@ -104,13 +100,22 @@ impl button::StyleSheet for Theme {
 
     fn active(&self, style: &Self::Style) -> button::Appearance {
         match style {
-            Button::Primary => button::Appearance {
+            Button::Default => button::Appearance {
                 background: Some(iced::Background::Color(self.palette().background)),
                 text_color: self.palette().text,
                 border: self.palette().border,
                 ..Default::default()
             },
-            Button::Secondary => todo!(),
+            Button::Circular => button::Appearance {
+                background: Some(iced::Background::Color(self.palette().background)),
+                text_color: self.palette().text,
+                border: iced::Border {
+                    color: self.palette().secondary,
+                    width: 2.0,
+                    radius: iced::border::Radius::from(75/2),
+                },
+                ..Default::default()
+            },
         }
     }
 }

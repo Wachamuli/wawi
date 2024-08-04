@@ -1,5 +1,6 @@
 use iced::{border, Border, Color};
 
+#[allow(dead_code)]
 #[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Theme {
     #[default]
@@ -7,6 +8,7 @@ pub enum Theme {
     Light,
 }
 
+#[allow(dead_code)]
 pub struct Palette {
     pub background: Color,
     pub foreground: Color,

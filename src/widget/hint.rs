@@ -3,6 +3,7 @@ use iced::{
     Element,
 };
 
+#[allow(dead_code)]
 pub fn hint<'a, Message: 'a>(
     content: impl Into<Element<'a, Message>>,
     hint: &str,
