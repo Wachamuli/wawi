@@ -5,5 +5,9 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.38"
-iced = { version = "0.12.1", features = ["image", "svg"]  } # add tokyo if needed
+iced = { version = "0.12.1", features = ["image", "svg", "tokio"] }
 iced_layershell = "0.2.7"
+serde = "1.0.204"
+serde_repr = "0.1.19"
+tokio = { version = "1.39.2", features = ["rt", "macros"] }
+zbus = { version = "4.4.0", default-features = false, features = ["tokio"] }

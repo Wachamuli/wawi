@@ -1,38 +1,40 @@
+mod binding;
 mod panel;
 mod styling;
 mod widget;
 
-use crate::panel::control_center::ControlCenter;
-use crate::widget::icon;
+use binding::upower::DeviceProxy;
+use widget::icon::icon;
 
 use iced::{
-    widget::{container, row},
+    alignment,
+    widget::{button, container, row, text, tooltip},
     Command, Element,
 };
-use iced_layershell::{reexport::Anchor, settings::LayerShellSettings, Application};
 
-struct Bar;
+use iced_layershell::{reexport::Anchor, Application};
 
-// TODO: Remove this
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-enum Message {
-    OpenControlCenter,
-    CloseControlCenter,
-    OpenCalendar,
-    CloseCalendar,
-    OpenNotificationsCenter,
-    CloseNotificationsCenter,
+struct Bar {
+    percentange: f64,
 }
 
-impl Application for Bar {
+#[derive(Debug, Clone)]
+enum Message {
+    BatteryState(zbus::Result<f64>),
+    OpenControlCenter,
+}
+
+impl iced_layershell::Application for Bar {
     type Message = Message;
     type Flags = ();
     type Theme = styling::theme::Theme;
     type Executor = iced::executor::Default;
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (Self, Command::none())
+        (
+            Self { percentange: 100.0 },
+            Command::perform(battery_state(), Message::BatteryState),
+        )
     }
 
     fn namespace(&self) -> String {
@@ -41,12 +43,19 @@ impl Application for Bar {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::OpenControlCenter => todo!(),
-            Message::CloseControlCenter => todo!(),
-            Message::OpenCalendar => todo!(),
-            Message::CloseCalendar => todo!(),
-            Message::OpenNotificationsCenter => todo!(),
-            Message::CloseNotificationsCenter => todo!(),
+            Message::BatteryState(state) => {
+                if let Ok(percentage) = state {
+                    self.percentange = percentage;
+                }
+
+                Command::none()
+            }
+            Message::OpenControlCenter => Command::none(),
+            // Message::CloseControlCenter => Command::none(),
+            // Message::OpenCalendar => todo!(),
+            // Message::CloseCalendar => todo!(),
+            // Message::OpenNotificationsCenter => todo!(),
+            // Message::CloseNotificationsCenter => todo!(),
         }
     }
 
@@ -56,18 +65,31 @@ impl Application for Bar {
 
         let left_section = container("Apps")
             .width(iced::Length::Fill)
-            .align_x(iced::alignment::Horizontal::Left);
+            .align_x(alignment::Horizontal::Left);
 
         let center_section = container("Workspaces")
             .width(iced::Length::Fill)
-            .align_x(iced::alignment::Horizontal::Center);
+            .align_x(alignment::Horizontal::Center);
 
         let right_section = container(
             row![
-                // icon::battery_indicator(),
-                // icon::wifi_indicator(),
+                button(tooltip(
+                    icon(include_bytes!("../assets/icons/battery-90.svg")),
+                    text(format!("Battery {}%", self.percentange)),
+                    tooltip::Position::Bottom
+                ))
+                .on_press(Message::OpenControlCenter),
+                tooltip(
+                    icon(include_bytes!("../assets/icons/wififull.svg")),
+                    "Connected to Crisel22",
+                    tooltip::Position::Bottom
+                ),
                 date_display,
-                // icon::bell_icon()
+                tooltip(
+                    icon(include_bytes!("../assets/icons/bell.svg")),
+                    "Notifications",
+                    tooltip::Position::Bottom
+                ),
             ]
             .spacing(20),
         )
@@ -75,17 +97,25 @@ impl Application for Bar {
         .align_x(iced::alignment::Horizontal::Right);
 
         container(row![left_section, center_section, right_section])
+            .height(iced::Length::Fill)
             .width(iced::Length::Fill)
             .padding([0, 8, 0, 8])
-            .height(iced::Length::Fill)
             .into()
     }
+}
+
+async fn battery_state<'a>() -> zbus::Result<f64> {
+    let connection = zbus::Connection::system().await?;
+    let upower = binding::upower::UPowerProxy::new(&connection).await?;
+    let interface = upower.get_display_device().await?;
+
+    interface.percentage().await
 }
 
 fn main() -> Result<(), iced_layershell::Error> {
     Bar::run(iced_layershell::settings::Settings {
         default_font: styling::font::SF_PRO,
-        layer_settings: LayerShellSettings {
+        layer_settings: iced_layershell::settings::LayerShellSettings {
             size: Some((0, 60)),
             exclusize_zone: 40,
             anchor: Anchor::Top | Anchor::Left | Anchor::Right,

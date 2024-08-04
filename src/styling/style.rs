@@ -2,7 +2,7 @@ use super::theme::Theme;
 
 use iced::{
     application,
-    widget::{container, svg, text},
+    widget::{button, container, svg, text},
     Background,
 };
 
@@ -93,7 +93,24 @@ impl svg::StyleSheet for Theme {
 }
 
 #[derive(Default, Debug, Clone, Copy)]
-enum Tooltip {
+pub enum Button {
     #[default]
-    Default
+    Primary,
+    Secondary
+}
+
+impl button::StyleSheet for Theme {
+    type Style = Button;
+
+    fn active(&self, style: &Self::Style) -> button::Appearance {
+        match style {
+            Button::Primary => button::Appearance {
+                background: Some(iced::Background::Color(self.palette().background)),
+                text_color: self.palette().text,
+                border: self.palette().border,
+                ..Default::default()
+            },
+            Button::Secondary => todo!(),
+        }
+    }
 }
