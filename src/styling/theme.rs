@@ -1,10 +1,10 @@
-use iced::{border, Border, Color};
+use iced::Color;
 
-#[allow(dead_code)]
 #[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Theme {
     #[default]
     Dark,
+    #[allow(unused)]
     Light,
 }
 
@@ -17,10 +17,11 @@ pub struct Palette {
     pub tertiary: Color,
     pub accent: Color,
     pub text: Color,
-    pub border: Border,
 }
 
 impl Theme {
+    pub const BORDER_WIDTH: f32 = 2.0;
+
     pub fn palette(self) -> Palette {
         match self {
             Theme::Light => todo!(),
@@ -32,11 +33,6 @@ impl Theme {
                 tertiary: Color::WHITE,
                 accent: Color::WHITE,
                 text: Color::WHITE,
-                border: Border {
-                    color: Color::WHITE,
-                    radius: border::Radius::from(10),
-                    width: 2.0,
-                },
             },
         }
     }

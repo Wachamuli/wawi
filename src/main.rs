@@ -78,14 +78,18 @@ impl iced_layershell::Application for Bar {
 
     fn view(&self) -> Element<Message, Self::Theme> {
         let datetime = chrono::Utc::now().format("%a %d %I:%M %p");
-        let date_display = iced::widget::text(datetime);
+        let date_display = iced::widget::text(datetime)
+            .font(styling::font::SF_PRO_BOLD)
+            .size(18);
 
         let left_section = container("Apps")
             .width(iced::Length::Fill)
+            .align_y(alignment::Vertical::Center)
             .align_x(alignment::Horizontal::Left);
 
         let center_section = container("Workspaces")
             .width(iced::Length::Fill)
+            .align_y(alignment::Vertical::Center)
             .align_x(alignment::Horizontal::Center);
 
         let right_section = container(
@@ -95,12 +99,14 @@ impl iced_layershell::Application for Bar {
                     text(format!("Battery {}%", self.percentange)),
                     tooltip::Position::Bottom
                 ))
+                .style(styling::style::Button::Invisible)
                 .on_press(Message::OpenControlCenter),
                 button(tooltip(
                     icon(include_bytes!("../assets/icons/wififull.svg")),
                     "Connected to Crisel22",
                     tooltip::Position::Bottom
                 ))
+                .style(styling::style::Button::Invisible)
                 .on_press(Message::CloseControlCenter),
                 date_display,
                 tooltip(
@@ -112,6 +118,7 @@ impl iced_layershell::Application for Bar {
             .spacing(20),
         )
         .width(iced::Length::Fill)
+        .align_y(alignment::Vertical::Center)
         .align_x(iced::alignment::Horizontal::Right);
 
         container(row![left_section, center_section, right_section])

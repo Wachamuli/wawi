@@ -1,5 +1,5 @@
 use iced::{
-    widget::{button, container},
+    widget::{button, column, container},
     Command,
 };
 
@@ -33,18 +33,21 @@ impl iced_layershell::Application for ControlCenter {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        container(iced::widget::column![button(
-            icon(include_bytes!("../../assets/icons/wififull.svg"))
+        container(column![
+            button(
+                icon(include_bytes!("../../assets/icons/wififull.svg"))
+                .content_fit(iced::ContentFit::Cover)
                 .width(25)
                 .height(25)
-        )
-        .style(styling::style::Button::Circular)
-        .width(75)
-        .height(75)
-        .on_press(Message::Close)])
+            )
+            .style(styling::style::Button::Circular)
+            .width(75)
+            .height(75)
+            .on_press(Message::Close)
+        ])
         .width(iced::Length::Fill)
         .height(iced::Length::Fill)
-        .style(styling::style::Container::Bordered)
+        .style(styling::style::Container::HeavyRounded)
         .into()
     }
 }

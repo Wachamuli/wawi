@@ -3,7 +3,7 @@ use super::theme::Theme;
 use iced::{
     application,
     widget::{button, container, svg, text},
-    Background,
+    Background, Border,
 };
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -27,7 +27,9 @@ impl application::StyleSheet for Theme {
 pub enum Container {
     #[default]
     Default,
-    Bordered,
+    #[allow(unused)]
+    Rounded,
+    HeavyRounded,
 }
 
 impl container::StyleSheet for Theme {
@@ -40,10 +42,24 @@ impl container::StyleSheet for Theme {
                 text_color: Some(self.palette().text),
                 ..Default::default()
             },
-            Container::Bordered => container::Appearance {
+            Container::Rounded => container::Appearance {
                 background: Some(Background::Color(self.palette().background)),
                 text_color: Some(self.palette().text),
-                border: self.palette().border,
+                border: Border {
+                    color: self.palette().secondary,
+                    width: Theme::BORDER_WIDTH,
+                    radius: iced::border::Radius::from(10),
+                },
+                ..Default::default()
+            },
+            Container::HeavyRounded => container::Appearance {
+                background: Some(Background::Color(self.palette().background)),
+                text_color: Some(self.palette().text),
+                border: Border {
+                    color: self.palette().secondary,
+                    width: Theme::BORDER_WIDTH,
+                    radius: iced::border::Radius::from(30),
+                },
                 ..Default::default()
             },
         }
@@ -93,6 +109,7 @@ pub enum Button {
     #[default]
     Default,
     Circular,
+    Invisible,
 }
 
 impl button::StyleSheet for Theme {
@@ -103,16 +120,29 @@ impl button::StyleSheet for Theme {
             Button::Default => button::Appearance {
                 background: Some(iced::Background::Color(self.palette().background)),
                 text_color: self.palette().text,
-                border: self.palette().border,
+                border: Border {
+                    color: self.palette().secondary,
+                    width: Theme::BORDER_WIDTH,
+                    radius: iced::border::Radius::from(10),
+                },
                 ..Default::default()
             },
             Button::Circular => button::Appearance {
                 background: Some(iced::Background::Color(self.palette().background)),
                 text_color: self.palette().text,
-                border: iced::Border {
+                border: Border {
                     color: self.palette().secondary,
-                    width: 2.0,
-                    radius: iced::border::Radius::from(75/2),
+                    width: Theme::BORDER_WIDTH,
+                    radius: iced::border::Radius::from(75 / 2),
+                },
+                ..Default::default()
+            },
+            Button::Invisible => button::Appearance {
+                background: None,
+                text_color: self.palette().text,
+                border: Border {
+                    width: 0.0,
+                    ..Default::default()
                 },
                 ..Default::default()
             },
