@@ -1,3 +1,5 @@
+use futures::FutureExt;
+use iced::futures::StreamExt;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use zbus::zvariant::OwnedValue;
 
@@ -127,4 +129,68 @@ trait Device {
 trait UPower {
     #[zbus(object = "Device")]
     fn get_display_device(&self);
+}
+
+#[derive(Debug, Clone)]
+pub enum UpowerEvent {
+    NoBattery,
+    Update {
+        is_charging: bool,
+        percent: f64,
+        time_to_empty: i64,
+    },
+}
+
+async fn event_stream() -> zbus::Result<impl futures::Stream<Item = UpowerEvent>> {
+    let connection = zbus::Connection::system().await?;
+    let upower = UPowerProxy::new(&connection).await?;
+    let device = upower.get_display_device().await?;
+
+    let stream = futures::stream_select!(
+        device.receive_state_changed().await.map(|_| ()),
+        device.receive_percentage_changed().await.map(|_| ()),
+        device.receive_time_to_empty_changed().await.map(|_| ()),
+    );
+
+    let initial = futures::stream::iter(None);
+
+    Ok(initial.chain(stream.map(move |_| {
+        UpowerEvent::Update {
+            is_charging: device
+                .cached_state()
+                .unwrap_or_default()
+                .map_or(false, |battery_state| match battery_state {
+                    BatteryState::Charging => true,
+                    _ => false,
+                }),
+            percent: device
+                .cached_percentage()
+                .unwrap_or_default()
+                .unwrap_or_default(),
+            time_to_empty: device
+                .cached_time_to_empty()
+                .unwrap_or_default()
+                .unwrap_or_default(),
+        }
+    })))
+}
+
+pub fn upower_suscription<I>(id: I) -> iced_futures::Subscription<UpowerEvent>
+where
+    I: 'static + std::hash::Hash,
+{
+    iced_futures::subscription::run_with_id(
+        id,
+        async move {
+            match event_stream().await {
+                Ok(stream) => stream,
+                Err(err) => {
+                    // TODO: You should have a logger for this.
+                    eprint!("An error has ocurred: {err}");
+                    futures::future::pending().await
+                }
+            }
+        }
+        .flatten_stream(),
+    )
 }

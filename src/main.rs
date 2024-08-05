@@ -12,7 +12,7 @@ use iced::{
     Command, Element,
 };
 
-use iced_layershell::{reexport::Anchor, Application};
+use iced_layershell::{reexport::Anchor, Application as _};
 
 struct Bar {
     percentange: f64,
@@ -20,33 +20,41 @@ struct Bar {
 
 #[derive(Debug, Clone)]
 enum Message {
-    BatteryState(zbus::Result<f64>),
+    UpowerDevice(binding::upower::UpowerEvent),
     OpenControlCenter,
     CloseControlCenter,
 }
 
 impl iced_layershell::Application for Bar {
-    type Message = Message;
-    type Flags = ();
-    type Theme = styling::theme::Theme;
     type Executor = iced::executor::Default;
+    type Message = Message;
+    type Theme = styling::theme::Theme;
+    type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (
-            Self { percentange: 100.0 },
-            Command::perform(battery_state(), Message::BatteryState),
-        )
+        (Self { percentange: 100.0 }, Command::none())
     }
 
     fn namespace(&self) -> String {
         String::from("morpheus")
     }
 
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        binding::upower::upower_suscription(0).map(Message::UpowerDevice)
+    }
+
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::BatteryState(state) => {
-                if let Ok(percentage) = state {
-                    self.percentange = percentage;
+            Message::UpowerDevice(event) => {
+                match event {
+                    binding::upower::UpowerEvent::Update {
+                        is_charging,
+                        percent,
+                        time_to_empty,
+                    } => {
+                        self.percentange = percent;
+                    }
+                    binding::upower::UpowerEvent::NoBattery => std::process::exit(0),
                 }
 
                 Command::none()
@@ -66,7 +74,7 @@ impl iced_layershell::Application for Bar {
                 })
                 .expect("Don't crash, please.");
 
-                iced::Command::none()
+                Command::none()
             }
             Message::CloseControlCenter => iced::window::close(iced::window::Id::MAIN),
             // Message::OpenCalendar => todo!(),
@@ -127,14 +135,6 @@ impl iced_layershell::Application for Bar {
             .padding([0, 8, 0, 8])
             .into()
     }
-}
-
-async fn battery_state<'a>() -> zbus::Result<f64> {
-    let connection = zbus::Connection::system().await?;
-    let upower = binding::upower::UPowerProxy::new(&connection).await?;
-    let interface = upower.get_display_device().await?;
-
-    interface.percentage().await
 }
 
 fn main() -> Result<(), iced_layershell::Error> {

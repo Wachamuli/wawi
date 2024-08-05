@@ -3536,7 +3536,9 @@ name = "wawi"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures",
  "iced",
+ "iced_futures",
  "iced_layershell",
  "serde",
  "serde_repr",
