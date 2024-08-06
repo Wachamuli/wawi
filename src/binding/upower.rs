@@ -129,11 +129,14 @@ trait Device {
 trait UPower {
     #[zbus(object = "Device")]
     fn get_display_device(&self);
+
+    fn enumerate_devices(&self) -> zbus::Result<Vec<zbus::zvariant::OwnedObjectPath>>;
 }
 
 #[derive(Debug, Clone)]
-pub enum UpowerEvent {
-    NoBattery,
+pub enum BatteryInfo {
+    #[allow(unused)]
+    NotAvailable,
     Update {
         is_charging: bool,
         percent: f64,
@@ -141,10 +144,35 @@ pub enum UpowerEvent {
     },
 }
 
-async fn event_stream() -> zbus::Result<impl futures::Stream<Item = UpowerEvent>> {
+async fn connection() -> zbus::Result<UPowerProxy<'static>> {
     let connection = zbus::Connection::system().await?;
     let upower = UPowerProxy::new(&connection).await?;
+
+    Ok(upower)
+}
+
+async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>> {
+    let upower = connection().await?;
+    let devices = upower.enumerate_devices().await?;
     let device = upower.get_display_device().await?;
+    let mut not_available = Some(BatteryInfo::NotAvailable);
+
+    for device in devices {
+        let Ok(d) = DeviceProxy::builder(upower.inner().connection()).path(device) else {
+            continue;
+        };
+        let Ok(d) = d.build().await else {
+            continue;
+        };
+
+        if d.type_().await == Ok(BatteryType::Battery) && d.power_supply().await.unwrap_or_default()
+        {
+            not_available = None;
+            break;
+        }
+    }
+
+    let initial = futures::stream::iter(not_available);
 
     let stream = futures::stream_select!(
         device.receive_state_changed().await.map(|_| ()),
@@ -152,10 +180,8 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = UpowerEvent>
         device.receive_time_to_empty_changed().await.map(|_| ()),
     );
 
-    let initial = futures::stream::iter(None);
-
     Ok(initial.chain(stream.map(move |_| {
-        UpowerEvent::Update {
+        BatteryInfo::Update {
             is_charging: device
                 .cached_state()
                 .unwrap_or_default()
@@ -175,7 +201,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = UpowerEvent>
     })))
 }
 
-pub fn upower_suscription<I>(id: I) -> iced_futures::Subscription<UpowerEvent>
+pub fn suscription<I>(id: I) -> iced_futures::Subscription<BatteryInfo>
 where
     I: 'static + std::hash::Hash,
 {

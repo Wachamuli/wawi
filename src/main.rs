@@ -3,6 +3,7 @@ mod panel;
 mod styling;
 mod widget;
 
+use futures::StreamExt;
 use panel::control_center::ControlCenter;
 use widget::icon::icon;
 
@@ -15,12 +16,12 @@ use iced::{
 use iced_layershell::{reexport::Anchor, Application as _};
 
 struct Bar {
-    percentange: f64,
+    percentage: f64,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
-    UpowerDevice(binding::upower::UpowerEvent),
+    UPowerDevice(binding::upower::BatteryInfo),
     OpenControlCenter,
     CloseControlCenter,
 }
@@ -32,7 +33,7 @@ impl iced_layershell::Application for Bar {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (Self { percentange: 100.0 }, Command::none())
+        (Self { percentage: 100.0 }, Command::none())
     }
 
     fn namespace(&self) -> String {
@@ -40,21 +41,21 @@ impl iced_layershell::Application for Bar {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        binding::upower::upower_suscription(0).map(Message::UpowerDevice)
+        binding::upower::suscription(0).map(Message::UPowerDevice)
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::UpowerDevice(event) => {
+            Message::UPowerDevice(event) => {
                 match event {
-                    binding::upower::UpowerEvent::Update {
+                    binding::upower::BatteryInfo::Update {
                         is_charging,
                         percent,
                         time_to_empty,
                     } => {
-                        self.percentange = percent;
+                        self.percentage = percent;
                     }
-                    binding::upower::UpowerEvent::NoBattery => std::process::exit(0),
+                    binding::upower::BatteryInfo::NotAvailable => std::process::exit(0),
                 }
 
                 Command::none()
@@ -103,8 +104,15 @@ impl iced_layershell::Application for Bar {
         let right_section = container(
             row![
                 button(tooltip(
-                    icon(include_bytes!("../assets/icons/battery-90.svg")),
-                    text(format!("Battery {}%", self.percentange)),
+                    iced::widget::svg(iced::widget::svg::Handle::from_path(format!(
+                        "{}/assets/icons/battery-{}.svg",
+                        env!("CARGO_MANIFEST_DIR"),
+                        (self.percentage as i32 + 5) / 10 * 10
+                    )))
+                    .style(styling::style::Svg::Icon)
+                    .width(20)
+                    .height(20),
+                    text(format!("Battery {}%", self.percentage)),
                     tooltip::Position::Bottom
                 ))
                 .style(styling::style::Button::Invisible)
