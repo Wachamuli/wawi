@@ -109,7 +109,6 @@ pub enum Button {
     #[default]
     Default,
     Circular,
-    Invisible,
 }
 
 impl button::StyleSheet for Theme {
@@ -133,16 +132,7 @@ impl button::StyleSheet for Theme {
                 border: Border {
                     color: self.palette().secondary,
                     width: Theme::BORDER_WIDTH,
-                    radius: iced::border::Radius::from(75 / 2),
-                },
-                ..Default::default()
-            },
-            Button::Invisible => button::Appearance {
-                background: None,
-                text_color: self.palette().text,
-                border: Border {
-                    width: 0.0,
-                    ..Default::default()
+                    radius: iced::border::Radius::from(40),
                 },
                 ..Default::default()
             },

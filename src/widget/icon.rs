@@ -1,6 +1,7 @@
 use crate::styling;
 use iced::widget::{svg, Svg};
 
+#[allow(dead_code)]
 pub fn icon(bytes: &'static [u8]) -> Svg<styling::theme::Theme> {
     const ICON_SIZE: u16 = 20;
 
