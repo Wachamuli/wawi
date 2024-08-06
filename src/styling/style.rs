@@ -3,7 +3,7 @@ use super::theme::Theme;
 use iced::{
     application,
     widget::{button, container, svg, text},
-    Background, Border,
+    Background, Border, Color,
 };
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -17,7 +17,7 @@ impl application::StyleSheet for Theme {
 
     fn appearance(&self, _style: &Self::Style) -> application::Appearance {
         application::Appearance {
-            background_color: self.palette().background,
+            background_color: Color::TRANSPARENT,
             text_color: self.palette().text,
         }
     }
