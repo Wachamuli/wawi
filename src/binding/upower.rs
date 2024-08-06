@@ -135,9 +135,8 @@ trait UPower {
 
 #[derive(Debug, Clone)]
 pub enum BatteryInfo {
-    #[allow(unused)]
     NotAvailable,
-    Update {
+    Available {
         is_charging: bool,
         percent: f64,
         time_to_empty: i64,
@@ -151,11 +150,11 @@ async fn connection() -> zbus::Result<UPowerProxy<'static>> {
     Ok(upower)
 }
 
-async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>> {
-    let upower = connection().await?;
-    let devices = upower.enumerate_devices().await?;
-    let device = upower.get_display_device().await?;
-    let mut not_available = Some(BatteryInfo::NotAvailable);
+async fn available_devices(
+    upower: UPowerProxy<'_>,
+    devices: Vec<zbus::zvariant::OwnedObjectPath>,
+) -> Option<BatteryInfo> {
+    let mut availability = Some(BatteryInfo::NotAvailable);
 
     for device in devices {
         let Ok(d) = DeviceProxy::builder(upower.inner().connection()).path(device) else {
@@ -167,12 +166,21 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
 
         if d.type_().await == Ok(BatteryType::Battery) && d.power_supply().await.unwrap_or_default()
         {
-            not_available = None;
+            availability = None;
             break;
         }
     }
 
-    let initial = futures::stream::iter(not_available);
+    availability
+}
+
+async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>> {
+    let upower = connection().await?;
+    let devices = upower.enumerate_devices().await?;
+    let device = upower.get_display_device().await?;
+
+    let availability = available_devices(upower, devices).await;
+    let initial = futures::stream::iter(availability);
 
     let stream = futures::stream_select!(
         device.receive_state_changed().await.map(|_| ()),
@@ -181,7 +189,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
     );
 
     Ok(initial.chain(stream.map(move |_| {
-        BatteryInfo::Update {
+        BatteryInfo::Available {
             is_charging: device
                 .cached_state()
                 .unwrap_or_default()

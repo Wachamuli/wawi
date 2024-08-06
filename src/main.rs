@@ -3,13 +3,8 @@ mod panel;
 mod styling;
 mod widget;
 
-use futures::StreamExt;
-use panel::control_center::ControlCenter;
-use widget::icon::icon;
-
 use iced::{
-    alignment,
-    widget::{button, container, row, text, tooltip},
+    widget::{container, text},
     Command, Element,
 };
 
@@ -22,8 +17,6 @@ struct Bar {
 #[derive(Debug, Clone)]
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
-    OpenControlCenter,
-    CloseControlCenter,
 }
 
 impl iced_layershell::Application for Bar {
@@ -48,7 +41,7 @@ impl iced_layershell::Application for Bar {
         match message {
             Message::UPowerDevice(event) => {
                 match event {
-                    binding::upower::BatteryInfo::Update {
+                    binding::upower::BatteryInfo::Available {
                         is_charging,
                         percent,
                         time_to_empty,
@@ -60,87 +53,14 @@ impl iced_layershell::Application for Bar {
 
                 Command::none()
             }
-            Message::OpenControlCenter => {
-                ControlCenter::run(iced_layershell::settings::Settings {
-                    antialiasing: true,
-                    default_font: styling::font::SF_PRO,
-                    layer_settings: iced_layershell::settings::LayerShellSettings {
-                        layer: iced_layershell::reexport::Layer::Overlay,
-                        anchor: Anchor::Right | Anchor::Top,
-                        margins: (45, 10, 0, 0),
-                        size: Some((500, 400)),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                })
-                .expect("Don't crash, please.");
-
-                Command::none()
-            }
-            Message::CloseControlCenter => iced::window::close(iced::window::Id::MAIN),
-            // Message::OpenCalendar => todo!(),
-            // Message::CloseCalendar => todo!(),
-            // Message::OpenNotificationsCenter => todo!(),
-            // Message::CloseNotificationsCenter => todo!(),
         }
     }
 
     fn view(&self) -> Element<Message, Self::Theme> {
-        let datetime = chrono::Utc::now().format("%a %d %I:%M %p");
-        let date_display = iced::widget::text(datetime)
-            .font(styling::font::SF_PRO_BOLD)
-            .size(18);
-
-        let left_section = container("Apps")
+        container(text("Control Center"))
             .width(iced::Length::Fill)
-            .align_y(alignment::Vertical::Center)
-            .align_x(alignment::Horizontal::Left);
-
-        let center_section = container("Workspaces")
-            .width(iced::Length::Fill)
-            .align_y(alignment::Vertical::Center)
-            .align_x(alignment::Horizontal::Center);
-
-        let right_section = container(
-            row![
-                button(tooltip(
-                    iced::widget::svg(iced::widget::svg::Handle::from_path(format!(
-                        "{}/assets/icons/battery-{}.svg",
-                        env!("CARGO_MANIFEST_DIR"),
-                        (self.percentage as i32 + 5) / 10 * 10
-                    )))
-                    .style(styling::style::Svg::Icon)
-                    .width(20)
-                    .height(20),
-                    text(format!("Battery {}%", self.percentage)),
-                    tooltip::Position::Bottom
-                ))
-                .style(styling::style::Button::Invisible)
-                .on_press(Message::OpenControlCenter),
-                button(tooltip(
-                    icon(include_bytes!("../assets/icons/wififull.svg")),
-                    "Connected to Crisel22",
-                    tooltip::Position::Bottom
-                ))
-                .style(styling::style::Button::Invisible)
-                .on_press(Message::CloseControlCenter),
-                date_display,
-                tooltip(
-                    icon(include_bytes!("../assets/icons/bell.svg")),
-                    "Notifications",
-                    tooltip::Position::Bottom
-                ),
-            ]
-            .spacing(20),
-        )
-        .width(iced::Length::Fill)
-        .align_y(alignment::Vertical::Center)
-        .align_x(iced::alignment::Horizontal::Right);
-
-        container(row![left_section, center_section, right_section])
             .height(iced::Length::Fill)
-            .width(iced::Length::Fill)
-            .padding([0, 8, 0, 8])
+            .style(styling::style::Container::HeavyRounded)
             .into()
     }
 }
