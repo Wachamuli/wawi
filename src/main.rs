@@ -14,12 +14,13 @@ struct ControlCenter {
     time_to_empty: i64,
 
     power_mode: String,
+    power_profiles: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
-    Hadess(binding::hadess::PowerModeInfo),
+    Hadess(binding::hadess::PowerProfileInfo),
 }
 
 impl iced_layershell::Application for ControlCenter {
@@ -36,8 +37,9 @@ impl iced_layershell::Application for ControlCenter {
                 is_charging: false,
 
                 power_mode: "Balanced".to_string(),
+                power_profiles: Vec::new(),
             },
-            Command::none(),
+            Command::perform(binding::hadess::get_profile_modes(), Message::Hadess),
         )
     }
 
@@ -54,31 +56,31 @@ impl iced_layershell::Application for ControlCenter {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::UPowerDevice(event) => {
-                match event {
-                    binding::upower::BatteryInfo::NotAvailable => {
-                        todo!("What to do when there's no battery in the system?")
-                    }
-                    binding::upower::BatteryInfo::Available {
-                        is_charging,
-                        percent,
-                        time_to_empty,
-                    } => {
-                        self.is_charging = is_charging;
-                        self.percentage = percent;
-                        self.time_to_empty = time_to_empty;
-                    }
+            Message::UPowerDevice(event) => match event {
+                binding::upower::BatteryInfo::NotAvailable => {
+                    todo!("What to do when there's no battery in the system?")
                 }
-
-                Command::none()
-            }
+                binding::upower::BatteryInfo::Available {
+                    is_charging,
+                    percent,
+                    time_to_empty,
+                } => {
+                    self.is_charging = is_charging;
+                    self.percentage = percent;
+                    self.time_to_empty = time_to_empty;
+                }
+            },
             Message::Hadess(event) => match event {
-                binding::hadess::PowerModeInfo::Active(mode) => {
+                binding::hadess::PowerProfileInfo::Active(mode) => {
                     self.power_mode = mode;
-                    Command::none()
+                }
+                binding::hadess::PowerProfileInfo::Profiles(power_profiles) => {
+                    self.power_profiles = power_profiles
                 }
             },
         }
+
+        Command::none()
     }
 
     fn view(&self) -> Element<Message, Self::Theme> {
@@ -126,14 +128,14 @@ impl iced_layershell::Application for ControlCenter {
                 container(
                     row![
                         button(svg(svg::Handle::from_path(wifi_icon)).width(25).height(25))
-                            .padding(17)
-                            .style(styling::style::Button::Circular),
+                            .style(styling::style::Button::Circular)
+                            .padding(17),
                         button(svg(svg::Handle::from_path(blue_icon)).width(25).height(25))
-                            .padding(17)
-                            .style(styling::style::Button::Circular),
+                            .style(styling::style::Button::Circular)
+                            .padding(17),
                         button(svg(svg::Handle::from_path(plane_icon)).width(25).height(25))
-                            .padding(17)
-                            .style(styling::style::Button::Circular),
+                            .style(styling::style::Button::Circular)
+                            .padding(17),
                     ]
                     .spacing(10)
                 )
@@ -141,10 +143,10 @@ impl iced_layershell::Application for ControlCenter {
             .align_items(Alignment::Center),
             container(column![rec_button])
         ])
+        .style(styling::style::Container::HeavyRounded)
         .padding(32)
         .width(iced::Length::Fill)
         .height(iced::Length::Fill)
-        .style(styling::style::Container::HeavyRounded)
         .into()
     }
 }
