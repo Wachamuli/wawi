@@ -1,8 +1,8 @@
 use futures::{FutureExt, StreamExt};
 
 #[zbus::proxy(
-    interface = "net.hadess.PowerProfiles",
-    default_path = "/net/hadess/PowerProfiles",
+    interface = "org.freedesktop.UPower.PowerProfiles",
+    default_path = "/org/freedesktop/UPower/PowerProfiles",
     assume_defaults = true
 )]
 trait PowerProfiles {
@@ -57,3 +57,10 @@ where
         .flatten_stream(),
     )
 }
+
+// pub async fn get_profile_modes() -> zbus::Result<String> {
+//     let power_profiles = connection().await?;
+//     let profiles = power_profiles.profiles().await?;
+
+//     profiles.await
+// }
