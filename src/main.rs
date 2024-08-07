@@ -85,8 +85,9 @@ impl iced_layershell::Application for ControlCenter {
 
     fn view(&self) -> Element<Message, Self::Theme> {
         let battery_icon = format!(
-            "{}/assets/icons/battery-{}.svg",
+            "{}/assets/icons/battery{}-{}.svg",
             env!("CARGO_MANIFEST_DIR"),
+            if self.is_charging { "-charging" } else { "" },
             (self.percentage as i32 + 5) / 10 * 10
         );
         let wifi_icon = format!("{}/assets/icons/wifi-full.svg", env!("CARGO_MANIFEST_DIR"));
