@@ -209,7 +209,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
     })))
 }
 
-pub fn suscription<I>(id: I) -> iced::Subscription<BatteryInfo>
+pub fn subscription<I>(id: I) -> iced::Subscription<BatteryInfo>
 where
     I: 'static + std::hash::Hash,
 {
