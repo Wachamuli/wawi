@@ -2,6 +2,8 @@ mod binding;
 mod styling;
 mod widget;
 
+use std::io::Empty;
+
 use iced::{
     widget::{button, column, container, row, svg, text},
     Alignment, Command, Element, Length,
@@ -77,6 +79,8 @@ impl iced_layershell::Application for ControlCenter {
         let blue_icon = format!("{}/assets/icons/bluetooth.svg", env!("CARGO_MANIFEST_DIR"));
         let plane_icon = format!("{}/assets/icons/airplane.svg", env!("CARGO_MANIFEST_DIR"));
 
+        // TODO: Power Profiles and Network Manager
+
         container(
             row![
                 container(
@@ -86,7 +90,7 @@ impl iced_layershell::Application for ControlCenter {
                             .height(25),
                         column![
                             text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
-                            text(format!("{} hours", self.time_to_empty / 3600))
+                            text(display_battery_time(self.time_to_empty))
                         ],
                     ]
                     .spacing(10)
@@ -96,13 +100,13 @@ impl iced_layershell::Application for ControlCenter {
                 container(
                     row![
                         button(svg(svg::Handle::from_path(wifi_icon)).width(25).height(25))
-                            .padding(20)
+                            .padding(17)
                             .style(styling::style::Button::Circular),
                         button(svg(svg::Handle::from_path(blue_icon)).width(25).height(25))
-                            .padding(20)
+                            .padding(17)
                             .style(styling::style::Button::Circular),
                         button(svg(svg::Handle::from_path(plane_icon)).width(25).height(25))
-                            .padding(20)
+                            .padding(17)
                             .style(styling::style::Button::Circular),
                     ]
                     .spacing(10)
@@ -115,6 +119,19 @@ impl iced_layershell::Application for ControlCenter {
         .height(iced::Length::Fill)
         .style(styling::style::Container::HeavyRounded)
         .into()
+    }
+}
+
+fn display_battery_time(seconds: i64) -> String {
+    let hours = seconds / 3600;
+    let minutes = (seconds % 3600) / 60;
+
+    match (hours, minutes) {
+        (h, _) if h > 1 => format!("{h} hours"),
+        (_, m) if m > 1 => format!("{m} minutes"),
+        (1, _) => format!("1 hour"),
+        (_, 1) => format!("1 minute"),
+        _ => String::from("Less than a minute"),
     }
 }
 
