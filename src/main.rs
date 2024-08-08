@@ -3,7 +3,7 @@ mod styling;
 mod widget;
 
 use iced::{
-    widget::{button, column, container, row, svg, text},
+    widget::{button, column, combo_box, container, row, svg, text},
     Alignment, Command, Element, Length,
 };
 use iced_layershell::{reexport::Anchor, Application as _};
@@ -21,6 +21,7 @@ struct ControlCenter {
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
     Hadess(binding::hadess::PowerProfileInfo),
+    PowerModeSelected,
 }
 
 impl iced_layershell::Application for ControlCenter {
@@ -78,6 +79,9 @@ impl iced_layershell::Application for ControlCenter {
                     self.power_profiles = power_profiles
                 }
             },
+            Message::PowerModeSelected => {
+                println!("Power mode selected");
+            }
         }
 
         Command::none()
@@ -95,13 +99,14 @@ impl iced_layershell::Application for ControlCenter {
         let plane_icon = format!("{}/assets/icons/airplane.svg", env!("CARGO_MANIFEST_DIR"));
         let power_icon = format!("{}/assets/icons/power-mode.svg", env!("CARGO_MANIFEST_DIR"));
 
-        // TODO: Power Profiles and Network Manager
+        // TODO: Network Manager
+
         let rec_button = button(
             row![
                 svg(svg::Handle::from_path(power_icon)).width(25).height(25),
                 column![
                     text("Power Mode").font(styling::font::SF_PRO_BOLD).size(16),
-                    text(kebab_to_pascal_case(&self.power_mode))
+                    text(styling::format::kebab_to_title_case(&self.power_mode))
                 ]
             ]
             .spacing(20)
@@ -119,7 +124,7 @@ impl iced_layershell::Application for ControlCenter {
                             .height(25),
                         column![
                             text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
-                            text(display_battery_time(self.time_to_empty))
+                            text(styling::format::seconds_to_hour_minute(self.time_to_empty))
                         ],
                     ]
                     .spacing(10)
@@ -150,33 +155,6 @@ impl iced_layershell::Application for ControlCenter {
         .height(iced::Length::Fill)
         .into()
     }
-}
-
-fn display_battery_time(seconds: i64) -> String {
-    let hours = seconds / 3600;
-    let minutes = (seconds % 3600) / 60;
-
-    match (hours, minutes) {
-        (h, _) if h > 1 => format!("{h} hours"),
-        (_, m) if m > 1 => format!("{m} minutes"),
-        (1, _) => format!("1 hour"),
-        (_, 1) => format!("1 minute"),
-        _ => String::from("Less than a minute"),
-    }
-}
-
-fn kebab_to_pascal_case(string: &String) -> String {
-    string
-        .split("-")
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                Some(n) => n.to_uppercase().to_string() + chars.as_str(),
-                None => String::new(),
-            }
-        })
-        .collect::<Vec<String>>()
-        .join(" ")
 }
 
 fn main() -> Result<(), iced_layershell::Error> {
