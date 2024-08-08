@@ -1,5 +1,4 @@
-use futures::FutureExt;
-use iced::futures::StreamExt;
+use iced::futures::{self, FutureExt, StreamExt};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use zbus::zvariant::OwnedValue;
 

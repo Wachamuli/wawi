@@ -24,7 +24,7 @@ struct ControlCenter {
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
     Hadess(binding::hadess::PowerProfileInfo),
-    PowerModeSelected,
+    SelectPowerProfile,
 }
 
 impl iced_layershell::Application for ControlCenter {
@@ -82,7 +82,7 @@ impl iced_layershell::Application for ControlCenter {
                     self.power_profiles = power_profiles
                 }
             },
-            Message::PowerModeSelected => {
+            Message::SelectPowerProfile => {
                 println!("Power mode selected");
             }
         }
@@ -162,13 +162,13 @@ impl iced_layershell::Application for ControlCenter {
                             "Power Mode",
                             styling::format::kebab_to_title_case(&self.power_mode),
                             &power_icon,
-                            Message::PowerModeSelected
+                            Message::SelectPowerProfile
                         ),
                         rectangular_button(
                             "Fan Profile",
                             "Silent".to_string(),
                             &fan_icon,
-                            Message::PowerModeSelected
+                            Message::SelectPowerProfile
                         ),
                     ]
                     .spacing(10)

@@ -1,4 +1,4 @@
-use futures::{FutureExt, StreamExt};
+use iced::futures::{self, FutureExt, StreamExt};
 
 #[zbus::proxy(
     interface = "org.freedesktop.UPower.PowerProfiles",
