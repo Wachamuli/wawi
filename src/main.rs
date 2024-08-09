@@ -13,7 +13,7 @@ use iced_layershell::{
 
 struct ControlCenter {
     is_battery_available: bool,
-    is_charging: bool,
+    on_battery: bool,
     percentage: f64,
     time_to_empty: i64,
 
@@ -38,9 +38,9 @@ impl iced_layershell::Application for ControlCenter {
         (
             Self {
                 is_battery_available: true,
+                on_battery: true,
                 percentage: 100.0,
                 time_to_empty: 0,
-                is_charging: false,
 
                 active_power_mode: binding::hadess::PowerProfile::Balanced,
                 power_profiles: Vec::new(),
@@ -67,11 +67,11 @@ impl iced_layershell::Application for ControlCenter {
                     self.is_battery_available = false;
                 }
                 binding::upower::BatteryInfo::Available {
-                    is_charging,
+                    on_battery,
                     percent,
                     time_to_empty,
                 } => {
-                    self.is_charging = is_charging;
+                    self.on_battery = on_battery;
                     self.percentage = percent;
                     self.time_to_empty = time_to_empty;
                 }
@@ -93,7 +93,7 @@ impl iced_layershell::Application for ControlCenter {
         let battery_icon = format!(
             "{}/assets/icons/battery{}-{}.svg",
             env!("CARGO_MANIFEST_DIR"),
-            if self.is_charging { "-charging" } else { "" },
+            if !self.on_battery { "-charging" } else { "" },
             (self.percentage as i32 + 5) / 10 * 10
         );
         let wifi_icon = format!("{}/assets/icons/wifi-full.svg", env!("CARGO_MANIFEST_DIR"));

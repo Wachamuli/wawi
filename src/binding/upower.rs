@@ -129,6 +129,9 @@ trait UPower {
     #[zbus(object = "Device")]
     fn get_display_device(&self);
 
+    #[zbus(property)]
+    fn on_battery(&self) -> zbus::Result<bool>;
+
     fn enumerate_devices(&self) -> zbus::Result<Vec<zbus::zvariant::OwnedObjectPath>>;
 }
 
@@ -136,7 +139,7 @@ trait UPower {
 pub enum BatteryInfo {
     NotAvailable,
     Available {
-        is_charging: bool,
+        on_battery: bool,
         percent: f64,
         time_to_empty: i64,
     },
@@ -150,7 +153,7 @@ async fn connection() -> zbus::Result<UPowerProxy<'static>> {
 }
 
 async fn available_devices(
-    upower: UPowerProxy<'_>,
+    upower: &UPowerProxy<'_>,
     devices: Vec<zbus::zvariant::OwnedObjectPath>,
 ) -> Option<BatteryInfo> {
     let mut availability = Some(BatteryInfo::NotAvailable);
@@ -178,7 +181,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
     let devices = upower.enumerate_devices().await?;
     let device = upower.get_display_device().await?;
 
-    let availability = available_devices(upower, devices).await;
+    let availability = available_devices(&upower, devices).await;
     let initial = futures::stream::iter(availability);
 
     let stream = futures::stream_select!(
@@ -189,13 +192,10 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
 
     Ok(initial.chain(stream.map(move |_| {
         BatteryInfo::Available {
-            is_charging: device
-                .cached_state()
+            on_battery: upower
+                .cached_on_battery()
                 .unwrap_or_default()
-                .map_or(false, |battery_state| match battery_state {
-                    BatteryState::Charging => true,
-                    _ => false,
-                }),
+                .unwrap_or_default(),
             percent: device
                 .cached_percentage()
                 .unwrap_or_default()
