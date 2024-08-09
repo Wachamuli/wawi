@@ -1,5 +1,3 @@
-use std::fmt::write;
-
 use iced::futures::{self, FutureExt, StreamExt};
 
 #[zbus::proxy(

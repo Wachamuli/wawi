@@ -1,9 +1,7 @@
 use iced::futures::{self, FutureExt, StreamExt};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use zbus::zvariant::OwnedValue;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize_repr, Serialize_repr, OwnedValue)]
-#[repr(u32)]
+#[derive(Debug, OwnedValue)]
 pub enum BatteryState {
     Unknown = 0,
     Charging = 1,
@@ -14,8 +12,7 @@ pub enum BatteryState {
     PendingDischarge = 6,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize_repr, Serialize_repr, OwnedValue)]
-#[repr(u32)]
+#[derive(Debug, PartialEq, OwnedValue)]
 pub enum BatteryType {
     Unknown = 0,
     LinePower = 1,
@@ -28,8 +25,7 @@ pub enum BatteryType {
     Phone = 8,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize_repr, Serialize_repr, OwnedValue)]
-#[repr(u32)]
+#[derive(Debug, OwnedValue)]
 pub enum BatteryLevel {
     Unknown = 0,
     None = 1,

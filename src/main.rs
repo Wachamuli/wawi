@@ -102,7 +102,7 @@ impl iced_layershell::Application for ControlCenter {
         let power_icon = format!("{}/assets/icons/power-mode.svg", env!("CARGO_MANIFEST_DIR"));
         let fan_icon = format!("{}/assets/icons/fan.svg", env!("CARGO_MANIFEST_DIR"));
 
-        // TODO: Network Manager, add power profile dropdown menu, change background to transparent
+        // TODO: Network Manager, add power profile dropdown menu, change background to transparent, add degraded performance to power profile
 
         let circular_button = |icon_path| {
             button(svg(svg::Handle::from_path(icon_path)).width(25).height(25))
@@ -110,7 +110,7 @@ impl iced_layershell::Application for ControlCenter {
                 .padding(17)
         };
 
-        let rectangular_button = |title, subtitle: &String, icon_path, message| {
+        let rectangular_button = |title, subtitle, icon_path, message| {
             button(
                 row![
                     svg(svg::Handle::from_path(icon_path)).width(25).height(25),
