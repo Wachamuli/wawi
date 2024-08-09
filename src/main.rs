@@ -3,7 +3,7 @@ mod styling;
 mod widget;
 
 use iced::{
-    widget::{button, column, container, row, svg, text},
+    widget::{button, column, container, row, slider, svg, text},
     Alignment, Command, Element, Length,
 };
 use iced_layershell::{
@@ -17,15 +17,18 @@ struct ControlCenter {
     percentage: f64,
     time_to_empty: i64,
 
-    active_power_mode: binding::hadess::PowerProfile,
-    power_profiles: Vec<String>,
+    master_volume: u32,
+
+    active_power_profile: binding::hadess::PowerProfile,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
     Hadess(binding::hadess::PowerProfileInfo),
-    SelectPowerProfile,
+    // SelectPowerProfile(binding::hadess::PowerProfile),
+    SetMasterVolume(u32),
+    ToggleProfiles,
 }
 
 impl iced_layershell::Application for ControlCenter {
@@ -42,8 +45,9 @@ impl iced_layershell::Application for ControlCenter {
                 percentage: 100.0,
                 time_to_empty: 0,
 
-                active_power_mode: binding::hadess::PowerProfile::Balanced,
-                power_profiles: Vec::new(),
+                master_volume: 100,
+
+                active_power_profile: binding::hadess::PowerProfile::Balanced,
             },
             Command::none(),
         )
@@ -77,12 +81,16 @@ impl iced_layershell::Application for ControlCenter {
                 }
             },
             Message::Hadess(event) => match event {
-                binding::hadess::PowerProfileInfo::Active(mode) => {
-                    self.active_power_mode = mode;
+                binding::hadess::PowerProfileInfo::Active(profile) => {
+                    self.active_power_profile = profile;
                 }
             },
-            Message::SelectPowerProfile => {
-                println!("Power mode selected");
+            // Message::SelectPowerProfile(_profile) => {
+            //     todo!("Maybe use std::process::Command to set the power profile?")
+            // }
+            Message::ToggleProfiles => todo!(),
+            Message::SetMasterVolume(volume) => {
+                self.master_volume = volume;
             }
         }
 
@@ -101,11 +109,14 @@ impl iced_layershell::Application for ControlCenter {
         let plane_icon = format!("{}/assets/icons/airplane.svg", env!("CARGO_MANIFEST_DIR"));
         let power_icon = format!("{}/assets/icons/power-mode.svg", env!("CARGO_MANIFEST_DIR"));
         let fan_icon = format!("{}/assets/icons/fan.svg", env!("CARGO_MANIFEST_DIR"));
+        let volume_icon = format!("{}/assets/icons/volume-up.svg", env!("CARGO_MANIFEST_DIR"));
+        let bright_icon = format!("{}/assets/icons/brightness.svg", env!("CARGO_MANIFEST_DIR"));
 
         // TODO: Network Manager, add power profile dropdown menu, change background to transparent, add degraded performance to power profile
+        let icon = |icon_path| svg(svg::Handle::from_path(icon_path)).width(25).height(25);
 
         let circular_button = |icon_path| {
-            button(svg(svg::Handle::from_path(icon_path)).width(25).height(25))
+            button(icon(icon_path))
                 .style(styling::style::Button::Circular)
                 .padding(17)
         };
@@ -113,7 +124,7 @@ impl iced_layershell::Application for ControlCenter {
         let rectangular_button = |title, subtitle, icon_path, message| {
             button(
                 row![
-                    svg(svg::Handle::from_path(icon_path)).width(25).height(25),
+                    icon(icon_path),
                     column![
                         text(title).font(styling::font::SF_PRO_BOLD).size(16),
                         text(subtitle)
@@ -131,9 +142,7 @@ impl iced_layershell::Application for ControlCenter {
             text("No Battery").into()
         } else {
             row![
-                svg(svg::Handle::from_path(battery_icon))
-                    .width(25)
-                    .height(25),
+                icon(battery_icon),
                 column![
                     text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
                     text(styling::format::seconds_to_hour_minute(self.time_to_empty))
@@ -150,9 +159,9 @@ impl iced_layershell::Application for ControlCenter {
                     container(battery).width(Length::Fill),
                     container(
                         row![
-                            circular_button(&wifi_icon),
-                            circular_button(&blue_icon),
-                            circular_button(&plane_icon),
+                            circular_button(wifi_icon),
+                            circular_button(blue_icon),
+                            circular_button(plane_icon),
                         ]
                         .spacing(10)
                     )
@@ -160,23 +169,40 @@ impl iced_layershell::Application for ControlCenter {
                 .align_items(Alignment::Center),
                 container(
                     column![
+                        row![
+                            icon(volume_icon),
+                            slider(0..=100, self.master_volume, Message::SetMasterVolume)
+                        ]
+                        .align_items(Alignment::Center)
+                        .spacing(10),
+                        row![
+                            icon(bright_icon),
+                            slider(0..=100, self.master_volume, Message::SetMasterVolume),
+                        ]
+                        .align_items(Alignment::Center)
+                        .spacing(10)
+                    ]
+                    .spacing(10)
+                ),
+                container(
+                    column![
                         rectangular_button(
                             "Power Mode",
-                            &self.active_power_mode.clone().into(),
-                            &power_icon,
-                            Message::SelectPowerProfile
+                            &self.active_power_profile.clone().into(),
+                            power_icon,
+                            Message::ToggleProfiles
                         ),
                         rectangular_button(
                             "Fan Profile",
                             &"Silent".to_string(),
-                            &fan_icon,
-                            Message::SelectPowerProfile
+                            fan_icon,
+                            Message::ToggleProfiles
                         ),
                     ]
                     .spacing(10)
                 )
             ]
-            .spacing(10),
+            .spacing(20),
         )
         .style(styling::style::Container::HeavyRounded)
         .padding(32)

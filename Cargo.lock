@@ -3526,8 +3526,6 @@ dependencies = [
  "chrono",
  "iced",
  "iced_layershell",
- "serde",
- "serde_repr",
  "zbus",
 ]
 

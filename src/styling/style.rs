@@ -1,8 +1,8 @@
 use super::theme::Theme;
 
 use iced::{
-    application,
-    widget::{button, container, svg, text},
+    application, border,
+    widget::{button, container, slider, svg, text},
     Background, Border, Color,
 };
 
@@ -135,6 +135,58 @@ impl button::StyleSheet for Theme {
                     radius: iced::border::Radius::from(40),
                 },
                 ..Default::default()
+            },
+        }
+    }
+}
+
+impl slider::StyleSheet for Theme {
+    type Style = ();
+
+    fn active(&self, _: &Self::Style) -> slider::Appearance {
+        slider::Appearance {
+            rail: slider::Rail {
+                colors: (self.palette().secondary, self.palette().primary),
+                border_radius: border::Radius::from(40),
+                width: 20.0,
+            },
+            handle: slider::Handle {
+                shape: slider::HandleShape::Circle { radius: 0.0 },
+                color: Color::TRANSPARENT,
+                border_width: 0.0,
+                border_color: Color::TRANSPARENT,
+            },
+        }
+    }
+
+    fn hovered(&self, _: &Self::Style) -> slider::Appearance {
+        slider::Appearance {
+            rail: slider::Rail {
+                colors: (self.palette().secondary, self.palette().primary),
+                border_radius: border::Radius::from(40),
+                width: 20.0,
+            },
+            handle: slider::Handle {
+                shape: slider::HandleShape::Circle { radius: 0.0 },
+                color: Color::TRANSPARENT,
+                border_width: 0.0,
+                border_color: Color::TRANSPARENT,
+            },
+        }
+    }
+
+    fn dragging(&self, _: &Self::Style) -> slider::Appearance {
+        slider::Appearance {
+            rail: slider::Rail {
+                colors: (self.palette().secondary, self.palette().primary),
+                border_radius: border::Radius::from(40),
+                width: 20.0,
+            },
+            handle: slider::Handle {
+                shape: slider::HandleShape::Circle { radius: 0.0 },
+                color: Color::TRANSPARENT,
+                border_width: 0.0,
+                border_color: Color::TRANSPARENT,
             },
         }
     }

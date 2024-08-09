@@ -9,8 +9,12 @@ trait PowerProfiles {
     #[zbus(property)]
     fn active_profile(&self) -> zbus::Result<String>;
 
+    // Not very useful, the data is given in a dynamic dict.
     #[zbus(property)]
     fn profiles(&self) -> zbus::Result<Vec<std::collections::HashMap<String, String>>>;
+
+    #[zbus(property)]
+    fn performance_degraded(&self) -> zbus::Result<String>;
 }
 
 #[derive(Debug, Clone)]
@@ -19,17 +23,6 @@ pub enum PowerProfile {
     Balanced,
     Performance,
     Unknown,
-}
-
-impl std::fmt::Display for PowerProfile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PowerProfile::PowerSaver => write!(f, "{}", "Power Saver"),
-            PowerProfile::Balanced => write!(f, "{}", "Balanced"),
-            PowerProfile::Performance => write!(f, "{}", "Performance"),
-            PowerProfile::Unknown => write!(f, "{}", "Unknown"),
-        }
-    }
 }
 
 impl From<String> for PowerProfile {
@@ -56,7 +49,6 @@ impl Into<String> for PowerProfile {
 
 #[derive(Debug, Clone)]
 pub enum PowerProfileInfo {
-    // Profiles(Vec<String>),
     Active(PowerProfile),
 }
 
@@ -66,29 +58,6 @@ async fn connection() -> zbus::Result<PowerProfilesProxy<'static>> {
 
     Ok(power_profiles)
 }
-
-// pub async fn get_profile_modes() -> PowerProfileInfo {
-//     // TODO: find a more ergonomic way to handle this.
-//     let Ok(conn) = connection().await else {
-//         eprintln!("DBUS: An error has ocurred stablishing the system connection.");
-//         return PowerProfileInfo::Profiles(Vec::new());
-//     };
-//     let Ok(profiles) = conn.profiles().await else {
-//         eprintln!("DBUS: An error has ocurred receiving the power profiles.");
-//         return PowerProfileInfo::Profiles(Vec::new());
-//     };
-
-//     // FIXME: it returns empty strings instead of nothing when the given key is missing.
-//     let power_profiles: Vec<String> = profiles
-//         .iter()
-//         .map(|f| match f.get("Profile") {
-//             Some(profile) => profile.clone(),
-//             None => String::new(),
-//         })
-//         .collect();
-
-//     PowerProfileInfo::Profiles(power_profiles)
-// }
 
 async fn event_stream() -> zbus::Result<impl futures::Stream<Item = PowerProfileInfo>> {
     let power_profiles = connection().await?;
