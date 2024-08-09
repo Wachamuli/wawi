@@ -17,6 +17,7 @@ struct ControlCenter {
     percentage: f64,
     time_to_empty: i64,
 
+    screen_brightness: u32,
     master_volume: u32,
 
     active_power_profile: binding::hadess::PowerProfile,
@@ -28,6 +29,9 @@ enum Message {
     Hadess(binding::hadess::PowerProfileInfo),
     // SelectPowerProfile(binding::hadess::PowerProfile),
     SetMasterVolume(u32),
+    SetBrightness(u32),
+    GetBrightness(u32),
+
     ToggleProfiles,
 }
 
@@ -46,6 +50,7 @@ impl iced_layershell::Application for ControlCenter {
                 time_to_empty: 0,
 
                 master_volume: 100,
+                screen_brightness: 96000,
 
                 active_power_profile: binding::hadess::PowerProfile::Balanced,
             },
@@ -88,9 +93,18 @@ impl iced_layershell::Application for ControlCenter {
             // Message::SelectPowerProfile(_profile) => {
             //     todo!("Maybe use std::process::Command to set the power profile?")
             // }
-            Message::ToggleProfiles => todo!(),
+            Message::SetBrightness(value) => {
+                let command = binding::logind::set_brightness(value);
+                return Command::perform(command, Message::GetBrightness);
+            }
+            Message::GetBrightness(value) => {
+                self.screen_brightness = value;
+            }
             Message::SetMasterVolume(volume) => {
                 self.master_volume = volume;
+            }
+            Message::ToggleProfiles => {
+                println!("Toggle Profiles");
             }
         }
 
@@ -177,7 +191,7 @@ impl iced_layershell::Application for ControlCenter {
                         .spacing(10),
                         row![
                             icon(bright_icon),
-                            slider(0..=100, self.master_volume, Message::SetMasterVolume),
+                            slider(0..=96000, self.screen_brightness, Message::SetBrightness),
                         ]
                         .align_items(Alignment::Center)
                         .spacing(10)
