@@ -12,6 +12,7 @@ use iced_layershell::{
 };
 
 struct ControlCenter {
+    is_battery_available: bool,
     is_charging: bool,
     percentage: f64,
     time_to_empty: i64,
@@ -36,6 +37,7 @@ impl iced_layershell::Application for ControlCenter {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
+                is_battery_available: true,
                 percentage: 100.0,
                 time_to_empty: 0,
                 is_charging: false,
@@ -62,7 +64,7 @@ impl iced_layershell::Application for ControlCenter {
         match message {
             Message::UPowerDevice(event) => match event {
                 binding::upower::BatteryInfo::NotAvailable => {
-                    todo!("What to do when there's no battery in the system?")
+                    self.is_battery_available = false;
                 }
                 binding::upower::BatteryInfo::Available {
                     is_charging,
@@ -125,24 +127,27 @@ impl iced_layershell::Application for ControlCenter {
             .padding([10, 20, 10, 20])
         };
 
+        let battery: Element<Message, Self::Theme> = if !self.is_battery_available {
+            text("No Battery").into()
+        } else {
+            row![
+                svg(svg::Handle::from_path(battery_icon))
+                    .width(25)
+                    .height(25),
+                column![
+                    text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
+                    text(styling::format::seconds_to_hour_minute(self.time_to_empty))
+                ],
+            ]
+            .spacing(10)
+            .align_items(Alignment::Center)
+            .into()
+        };
+
         container(
             column![
                 row![
-                    container(
-                        row![
-                            svg(svg::Handle::from_path(battery_icon))
-                                .width(25)
-                                .height(25),
-                            column![
-                                text(format!("{}%", self.percentage))
-                                    .font(styling::font::SF_PRO_BOLD),
-                                text(styling::format::seconds_to_hour_minute(self.time_to_empty))
-                            ],
-                        ]
-                        .spacing(10)
-                        .align_items(Alignment::Center),
-                    )
-                    .width(Length::Fill),
+                    container(battery).width(Length::Fill),
                     container(
                         row![
                             circular_button(&wifi_icon),
