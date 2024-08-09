@@ -16,7 +16,7 @@ struct ControlCenter {
     percentage: f64,
     time_to_empty: i64,
 
-    power_mode: String,
+    active_power_mode: binding::hadess::PowerProfile,
     power_profiles: Vec<String>,
 }
 
@@ -40,10 +40,10 @@ impl iced_layershell::Application for ControlCenter {
                 time_to_empty: 0,
                 is_charging: false,
 
-                power_mode: "Balanced".to_string(),
+                active_power_mode: binding::hadess::PowerProfile::Balanced,
                 power_profiles: Vec::new(),
             },
-            Command::perform(binding::hadess::get_profile_modes(), Message::Hadess),
+            Command::none(),
         )
     }
 
@@ -76,10 +76,7 @@ impl iced_layershell::Application for ControlCenter {
             },
             Message::Hadess(event) => match event {
                 binding::hadess::PowerProfileInfo::Active(mode) => {
-                    self.power_mode = mode;
-                }
-                binding::hadess::PowerProfileInfo::Profiles(power_profiles) => {
-                    self.power_profiles = power_profiles
+                    self.active_power_mode = mode;
                 }
             },
             Message::SelectPowerProfile => {
@@ -111,7 +108,7 @@ impl iced_layershell::Application for ControlCenter {
                 .padding(17)
         };
 
-        let rectangular_button = |title, subtitle, icon_path, message| {
+        let rectangular_button = |title, subtitle: &String, icon_path, message| {
             button(
                 row![
                     svg(svg::Handle::from_path(icon_path)).width(25).height(25),
@@ -160,13 +157,13 @@ impl iced_layershell::Application for ControlCenter {
                     column![
                         rectangular_button(
                             "Power Mode",
-                            styling::format::kebab_to_title_case(&self.power_mode),
+                            &self.active_power_mode.clone().into(),
                             &power_icon,
                             Message::SelectPowerProfile
                         ),
                         rectangular_button(
                             "Fan Profile",
-                            "Silent".to_string(),
+                            &"Silent".to_string(),
                             &fan_icon,
                             Message::SelectPowerProfile
                         ),
