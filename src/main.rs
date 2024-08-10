@@ -17,8 +17,10 @@ struct ControlCenter {
     percentage: f64,
     time_to_empty: i64,
 
-    screen_brightness: u32,
     master_volume: u32,
+
+    brightness_device: Option<binding::logind::BrightnessDevice>,
+    screen_brightness: u32,
 
     active_power_profile: binding::hadess::PowerProfile,
 }
@@ -27,11 +29,11 @@ struct ControlCenter {
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
     Hadess(binding::hadess::PowerProfileInfo),
+    BrightnessDevice(Option<binding::logind::BrightnessDevice>),
     // SelectPowerProfile(binding::hadess::PowerProfile),
     SetMasterVolume(u32),
     SetBrightness(u32),
     GetBrightness(u32),
-
     ToggleProfiles,
 }
 
@@ -50,11 +52,16 @@ impl iced_layershell::Application for ControlCenter {
                 time_to_empty: 0,
 
                 master_volume: 100,
-                screen_brightness: 96000,
+
+                brightness_device: None,
+                screen_brightness: 0,
 
                 active_power_profile: binding::hadess::PowerProfile::Balanced,
             },
-            Command::none(),
+            Command::none(), // Command::perform(
+                             //     binding::logind::get_brightness_device(),
+                             //     Message::BrightnessDevice,
+                             // ),
         )
     }
 
@@ -93,6 +100,9 @@ impl iced_layershell::Application for ControlCenter {
             // Message::SelectPowerProfile(_profile) => {
             //     todo!("Maybe use std::process::Command to set the power profile?")
             // }
+            Message::BrightnessDevice(device) => {
+                self.brightness_device = device;
+            }
             Message::SetBrightness(value) => {
                 let command = binding::logind::set_brightness(value);
                 return Command::perform(command, Message::GetBrightness);
