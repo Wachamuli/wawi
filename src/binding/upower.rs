@@ -150,7 +150,7 @@ async fn connection() -> zbus::Result<UPowerProxy<'static>> {
 
 async fn available_devices(
     upower: &UPowerProxy<'_>,
-    devices: Vec<zbus::zvariant::OwnedObjectPath>,
+    devices: &Vec<zbus::zvariant::OwnedObjectPath>,
 ) -> Option<BatteryInfo> {
     let mut availability = Some(BatteryInfo::NotAvailable);
 
@@ -177,7 +177,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
     let devices = upower.enumerate_devices().await?;
     let device = upower.get_display_device().await?;
 
-    let availability = available_devices(&upower, devices).await;
+    let availability = available_devices(&upower, &devices).await;
     let initial = futures::stream::iter(availability);
 
     let stream = futures::stream_select!(

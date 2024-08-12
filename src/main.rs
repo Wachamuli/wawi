@@ -49,6 +49,7 @@ impl iced_layershell::Application for ControlCenter {
         (
             Self {
                 master_volume: 100,
+                on_battery: true,
                 ..Default::default()
             },
             Command::none(),
@@ -57,14 +58,6 @@ impl iced_layershell::Application for ControlCenter {
 
     fn namespace(&self) -> String {
         String::from("morpheus")
-    }
-
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::Subscription::batch([
-            binding::upower::subscription(0).map(Message::UPowerDevice),
-            binding::hadess::subscription(0).map(Message::HadessDevice),
-            binding::logind::subscription(0).map(Message::ScreenDevice),
-        ])
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -122,8 +115,8 @@ impl iced_layershell::Application for ControlCenter {
         let battery_icon = format!(
             "{}/assets/icons/battery{}-{}.svg",
             env!("CARGO_MANIFEST_DIR"),
-            if !self.on_battery { "-charging" } else { "" },
-            (self.percentage as i32 + 5) / 10 * 10
+            if self.on_battery { "" } else { "-charging" },
+            ((self.percentage as i32 + 5) / 10) * 10
         );
         let wifi_icon = format!("{}/assets/icons/wifi-full.svg", env!("CARGO_MANIFEST_DIR"));
         let blue_icon = format!("{}/assets/icons/bluetooth.svg", env!("CARGO_MANIFEST_DIR"));
@@ -160,7 +153,7 @@ impl iced_layershell::Application for ControlCenter {
         };
 
         let battery = row![
-            icon(battery_icon),
+            icon(&battery_icon),
             column![
                 text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
                 text(styling::format::seconds_to_hour_minute(self.time_to_empty))
@@ -175,9 +168,9 @@ impl iced_layershell::Application for ControlCenter {
                     container(battery).width(Length::Fill),
                     container(
                         row![
-                            circular_button(wifi_icon),
-                            circular_button(blue_icon),
-                            circular_button(plane_icon),
+                            circular_button(&wifi_icon),
+                            circular_button(&blue_icon),
+                            circular_button(&plane_icon),
                         ]
                         .spacing(10)
                     )
@@ -186,13 +179,13 @@ impl iced_layershell::Application for ControlCenter {
                 container(
                     column![
                         row![
-                            icon(volume_icon),
+                            icon(&volume_icon),
                             slider(0..=100, self.master_volume, Message::SetMasterVolume)
                         ]
                         .align_items(Alignment::Center)
                         .spacing(10),
                         row![
-                            icon(bright_icon),
+                            icon(&bright_icon),
                             slider(
                                 self.min_brightness..=self.max_brightness,
                                 self.current_brightness,
@@ -208,14 +201,14 @@ impl iced_layershell::Application for ControlCenter {
                     column![
                         rectangular_button(
                             "Power Mode",
-                            &self.active_power_profile.clone().into(),
-                            power_icon,
+                            self.active_power_profile.to_string(),
+                            &power_icon,
                             Message::ToggleProfiles
                         ),
                         rectangular_button(
                             "Fan Profile",
-                            &"Silent".to_string(),
-                            fan_icon,
+                            "Silent".to_string(),
+                            &fan_icon,
                             Message::ToggleProfiles
                         ),
                     ]
@@ -229,6 +222,14 @@ impl iced_layershell::Application for ControlCenter {
         .width(iced::Length::Fill)
         .height(iced::Length::Fill)
         .into()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        iced::Subscription::batch([
+            binding::upower::subscription(0).map(Message::UPowerDevice),
+            binding::hadess::subscription(0).map(Message::HadessDevice),
+            binding::logind::subscription(0).map(Message::ScreenDevice),
+        ])
     }
 }
 

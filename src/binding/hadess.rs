@@ -27,6 +27,17 @@ pub enum PowerProfile {
     Unknown,
 }
 
+impl std::fmt::Display for PowerProfile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PowerProfile::PowerSaver => write!(f, "Power Saver"),
+            PowerProfile::Balanced => write!(f, "Balanced"),
+            PowerProfile::Performance => write!(f, "Performance"),
+            PowerProfile::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
 impl From<String> for PowerProfile {
     fn from(value: String) -> Self {
         match value.as_str() {
@@ -34,17 +45,6 @@ impl From<String> for PowerProfile {
             "balanced" => Self::Balanced,
             "performance" => Self::Performance,
             _ => Self::Unknown,
-        }
-    }
-}
-
-impl Into<String> for PowerProfile {
-    fn into(self) -> String {
-        match self {
-            PowerProfile::PowerSaver => "Power Saver".to_string(),
-            PowerProfile::Balanced => "Balanced".to_string(),
-            PowerProfile::Performance => "Performance".to_string(),
-            PowerProfile::Unknown => "Unknown".to_string(),
         }
     }
 }
