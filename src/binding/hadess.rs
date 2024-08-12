@@ -59,7 +59,7 @@ async fn connection() -> zbus::Result<PowerProfilesProxy<'static>> {
     Ok(power_profiles)
 }
 
-async fn event_stream() -> zbus::Result<impl futures::Stream<Item = PowerProfileInfo>> {
+pub async fn event_stream() -> zbus::Result<impl futures::Stream<Item = PowerProfileInfo>> {
     let power_profiles = connection().await?;
     let stream = power_profiles.receive_active_profile_changed().await;
 

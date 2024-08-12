@@ -112,18 +112,8 @@ pub async fn get_brightness_device() -> Option<BrightnessDevice> {
     brightnes_device
 }
 
-pub async fn set_brightness(value: u32) -> u32 {
-    if let Ok(logind) = connection().await {
-        let _ = logind
-            .set_brightness("backlight", "intel_backlight", value)
-            .await;
-    }
-
-    value
-}
-
 pub struct DisplayBrightnessDevice {
-    pub display_brightness_device: Option<BrightnessDevice>,
+    display_brightness_device: Option<BrightnessDevice>,
 }
 
 impl DisplayBrightnessDevice {
@@ -134,7 +124,14 @@ impl DisplayBrightnessDevice {
     }
 }
 
-#[zbus::interface(name = "org.morpheus.DisplayBrightnessDevice")]
+#[zbus::interface(
+    name = "org.morpheus.DisplayBrightnessDevice",
+    proxy(
+        gen_blocking = false,
+        default_service = "org.morpheus.DisplayBrightnessDevice",
+        default_path = "/org/morpheus/DisplayBrightnessDevice",
+    )
+)]
 impl DisplayBrightnessDevice {
     #[zbus(property)]
     async fn current_brightness(&self) -> i32 {
@@ -169,4 +166,70 @@ impl DisplayBrightnessDevice {
             device.set_brightness(value).await;
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum DisplayInfo {
+    Update {
+        current_brightness: i32,
+        max_brightness: i32,
+        min_brightness: i32,
+    },
+}
+
+async fn conn() -> zbus::Result<DisplayBrightnessDeviceProxy<'static>> {
+    let conn = zbus::Connection::session().await?;
+    let device = DisplayBrightnessDeviceProxy::new(&conn).await?;
+
+    Ok(device)
+}
+
+pub async fn set_brightness(value: i32) -> i32 {
+    if let Ok(device) = conn().await {
+        device
+            .set_brightness(value as u32)
+            .await
+            .unwrap_or_else(|err| eprintln!("Couldn't set the display brightness: {err}"));
+    }
+
+    value
+}
+
+async fn event_stream() -> zbus::Result<impl futures::Stream<Item = DisplayInfo>> {
+    let device = conn().await?;
+    let stream = device.receive_current_brightness_changed().await;
+
+    Ok(stream.map(move |_| DisplayInfo::Update {
+        current_brightness: device
+            .cached_current_brightness()
+            .unwrap_or_default()
+            .unwrap_or_default(),
+        max_brightness: device
+            .cached_max_brightness()
+            .unwrap_or_default()
+            .unwrap_or_default(),
+        min_brightness: device
+            .cached_min_brightness()
+            .unwrap_or_default()
+            .unwrap_or_default(),
+    }))
+}
+
+pub fn subscription<T>(id: T) -> iced::Subscription<DisplayInfo>
+where
+    T: 'static + std::hash::Hash,
+{
+    iced::subscription::run_with_id(
+        id,
+        async move {
+            match event_stream().await {
+                Ok(sst) => sst,
+                Err(err) => {
+                    eprintln!("An error has ocurred: {err}");
+                    futures::future::pending().await
+                }
+            }
+        }
+        .flatten_stream(),
+    )
 }

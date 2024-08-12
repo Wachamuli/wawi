@@ -2,8 +2,6 @@ mod binding;
 mod styling;
 mod widget;
 
-use std::backtrace;
-
 use iced::{
     futures::StreamExt,
     widget::{button, column, container, row, slider, svg, text},
@@ -22,8 +20,9 @@ struct ControlCenter {
 
     master_volume: u32,
 
-    brightness_device: Option<binding::logind::BrightnessDevice>,
-    screen_brightness: u32,
+    current_brightness: i32,
+    max_brightness: i32,
+    min_brightness: i32,
 
     active_power_profile: binding::hadess::PowerProfile,
 }
@@ -31,12 +30,12 @@ struct ControlCenter {
 #[derive(Debug, Clone)]
 enum Message {
     UPowerDevice(binding::upower::BatteryInfo),
-    Hadess(binding::hadess::PowerProfileInfo),
-    BrightnessDevice(Option<binding::logind::BrightnessDevice>),
-    // SelectPowerProfile(binding::hadess::PowerProfile),
+    HadessDevice(binding::hadess::PowerProfileInfo),
+    ScreenDevice(binding::logind::DisplayInfo),
+
     SetMasterVolume(u32),
-    SetBrightness(u32),
-    GetBrightness(u32),
+    SetBrightness(i32),
+    GetBrightness(i32),
     ToggleProfiles,
 }
 
@@ -56,8 +55,9 @@ impl iced_layershell::Application for ControlCenter {
 
                 master_volume: 100,
 
-                brightness_device: None,
-                screen_brightness: 96000,
+                current_brightness: 0,
+                max_brightness: 0,
+                min_brightness: 0,
 
                 active_power_profile: binding::hadess::PowerProfile::Balanced,
             },
@@ -72,7 +72,8 @@ impl iced_layershell::Application for ControlCenter {
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         iced::Subscription::batch([
             binding::upower::subscription(0).map(Message::UPowerDevice),
-            binding::hadess::subscription(0).map(Message::Hadess),
+            binding::hadess::subscription(0).map(Message::HadessDevice),
+            binding::logind::subscription(0).map(Message::ScreenDevice),
         ])
     }
 
@@ -92,7 +93,7 @@ impl iced_layershell::Application for ControlCenter {
                     self.time_to_empty = time_to_empty;
                 }
             },
-            Message::Hadess(event) => match event {
+            Message::HadessDevice(event) => match event {
                 binding::hadess::PowerProfileInfo::Active(profile) => {
                     self.active_power_profile = profile;
                 }
@@ -100,21 +101,33 @@ impl iced_layershell::Application for ControlCenter {
             // Message::SelectPowerProfile(_profile) => {
             //     todo!("Maybe use std::process::Command to set the power profile?")
             // }
-            Message::BrightnessDevice(device) => {
-                self.brightness_device = device;
-            }
+            Message::ScreenDevice(event) => match event {
+                binding::logind::DisplayInfo::Update {
+                    current_brightness,
+                    max_brightness,
+                    min_brightness,
+                } => {
+                    self.current_brightness = current_brightness;
+                    self.max_brightness = max_brightness;
+                    self.min_brightness = min_brightness;
+                }
+            },
             Message::SetBrightness(value) => {
                 let command = binding::logind::set_brightness(value);
                 return Command::perform(command, Message::GetBrightness);
             }
             Message::GetBrightness(value) => {
-                self.screen_brightness = value;
+                self.current_brightness = value as i32;
             }
-            Message::SetMasterVolume(volume) => {
-                self.master_volume = volume;
-            }
+            // Message::SetMasterVolume(volume) => {
+            //     self.master_volume = volume;
+            // }
             Message::ToggleProfiles => {
                 println!("Toggle Profiles");
+            }
+            Message::SetMasterVolume(value) => {
+                self.master_volume = value;
+                println!("Setting master volume: {value}");
             }
         }
 
@@ -201,7 +214,11 @@ impl iced_layershell::Application for ControlCenter {
                         .spacing(10),
                         row![
                             icon(bright_icon),
-                            slider(0..=96000, self.screen_brightness, Message::SetBrightness),
+                            slider(
+                                self.min_brightness..=self.max_brightness,
+                                self.current_brightness,
+                                Message::SetBrightness
+                            ),
                         ]
                         .align_items(Alignment::Center)
                         .spacing(10)
@@ -251,6 +268,23 @@ fn main() -> Result<(), iced_layershell::Error> {
         ..Default::default()
     })
 }
+
+// mod binding;
+
+// use iced::futures::StreamExt;
+
+// #[tokio::main]
+// async fn main() -> zbus::Result<()> {
+//     if let Ok(mut stream) = binding::logind::event_stream().await {
+//         while let Some(s) = stream.next().await {
+//             println!("{:?}", s)
+//         }
+//     }
+
+//     Ok(())
+// }
+
+// mod binding;
 
 // #[tokio::main]
 // async fn main() -> zbus::Result<()> {
