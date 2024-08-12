@@ -1,3 +1,4 @@
+use iced::futures::{self, FutureExt, StreamExt};
 use std::io;
 
 #[zbus::proxy(
@@ -119,4 +120,53 @@ pub async fn set_brightness(value: u32) -> u32 {
     }
 
     value
+}
+
+pub struct DisplayBrightnessDevice {
+    pub display_brightness_device: Option<BrightnessDevice>,
+}
+
+impl DisplayBrightnessDevice {
+    pub fn new(display_brightness_device: Option<BrightnessDevice>) -> Self {
+        Self {
+            display_brightness_device,
+        }
+    }
+}
+
+#[zbus::interface(name = "org.morpheus.DisplayBrightnessDevice")]
+impl DisplayBrightnessDevice {
+    #[zbus(property)]
+    async fn current_brightness(&self) -> i32 {
+        let Some(brightness_device) = &self.display_brightness_device else {
+            return -1;
+        };
+        let Ok(current_brightness) = brightness_device.brightness().await else {
+            return -1;
+        };
+
+        current_brightness as i32
+    }
+
+    #[zbus(property)]
+    fn max_brightness(&self) -> i32 {
+        match &self.display_brightness_device {
+            Some(t) => t.max_brightness() as i32,
+            None => -1,
+        }
+    }
+
+    #[zbus(property)]
+    fn min_brightness(&self) -> i32 {
+        match &self.display_brightness_device {
+            Some(t) => t.min_brightness() as i32,
+            None => -1,
+        }
+    }
+
+    async fn set_brightness(&self, value: u32) {
+        if let Some(device) = &self.display_brightness_device {
+            device.set_brightness(value).await;
+        }
+    }
 }

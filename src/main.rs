@@ -2,7 +2,10 @@ mod binding;
 mod styling;
 mod widget;
 
+use std::backtrace;
+
 use iced::{
+    futures::StreamExt,
     widget::{button, column, container, row, slider, svg, text},
     Alignment, Command, Element, Length,
 };
@@ -54,14 +57,11 @@ impl iced_layershell::Application for ControlCenter {
                 master_volume: 100,
 
                 brightness_device: None,
-                screen_brightness: 0,
+                screen_brightness: 96000,
 
                 active_power_profile: binding::hadess::PowerProfile::Balanced,
             },
-            Command::none(), // Command::perform(
-                             //     binding::logind::get_brightness_device(),
-                             //     Message::BrightnessDevice,
-                             // ),
+            Command::none(),
         )
     }
 
@@ -251,3 +251,24 @@ fn main() -> Result<(), iced_layershell::Error> {
         ..Default::default()
     })
 }
+
+// #[tokio::main]
+// async fn main() -> zbus::Result<()> {
+//     let display_brightness_device = binding::logind::get_brightness_device().await;
+//     let device = binding::logind::DisplayBrightnessDevice::new(display_brightness_device);
+
+//     let connection = zbus::Connection::session().await?;
+//     connection
+//         .object_server()
+//         .at("/org/morpheus/DisplayBrightnessDevice", device)
+//         .await?;
+//     connection
+//         .request_name("org.morpheus.DisplayBrightnessDevice")
+//         .await?;
+
+//     loop {
+//         // do something else, wait forever or timeout here:
+//         // handling D-Bus messages is done in the background
+//         std::future::pending::<()>().await;
+//     }
+// }
