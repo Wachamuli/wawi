@@ -3,7 +3,6 @@ mod styling;
 mod widget;
 
 use iced::{
-    futures::StreamExt,
     widget::{button, column, container, row, slider, svg, text},
     Alignment, Command, Element, Length,
 };
@@ -12,6 +11,7 @@ use iced_layershell::{
     Application as _,
 };
 
+#[derive(Default)]
 struct ControlCenter {
     is_battery_available: bool,
     on_battery: bool,
@@ -48,18 +48,8 @@ impl iced_layershell::Application for ControlCenter {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
-                is_battery_available: true,
-                on_battery: true,
-                percentage: 100.0,
-                time_to_empty: 0,
-
                 master_volume: 100,
-
-                current_brightness: 0,
-                max_brightness: 0,
-                min_brightness: 0,
-
-                active_power_profile: binding::hadess::PowerProfile::Balanced,
+                ..Default::default()
             },
             Command::none(),
         )
@@ -98,9 +88,6 @@ impl iced_layershell::Application for ControlCenter {
                     self.active_power_profile = profile;
                 }
             },
-            // Message::SelectPowerProfile(_profile) => {
-            //     todo!("Maybe use std::process::Command to set the power profile?")
-            // }
             Message::ScreenDevice(event) => match event {
                 binding::logind::DisplayInfo::Update {
                     current_brightness,
@@ -119,9 +106,6 @@ impl iced_layershell::Application for ControlCenter {
             Message::GetBrightness(value) => {
                 self.current_brightness = value as i32;
             }
-            // Message::SetMasterVolume(volume) => {
-            //     self.master_volume = volume;
-            // }
             Message::ToggleProfiles => {
                 println!("Toggle Profiles");
             }
@@ -175,20 +159,15 @@ impl iced_layershell::Application for ControlCenter {
             .padding([10, 20, 10, 20])
         };
 
-        let battery: Element<Message, Self::Theme> = if !self.is_battery_available {
-            text("No Battery").into()
-        } else {
-            row![
-                icon(battery_icon),
-                column![
-                    text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
-                    text(styling::format::seconds_to_hour_minute(self.time_to_empty))
-                ],
-            ]
-            .spacing(10)
-            .align_items(Alignment::Center)
-            .into()
-        };
+        let battery = row![
+            icon(battery_icon),
+            column![
+                text(format!("{}%", self.percentage)).font(styling::font::SF_PRO_BOLD),
+                text(styling::format::seconds_to_hour_minute(self.time_to_empty))
+            ],
+        ]
+        .spacing(10)
+        .align_items(Alignment::Center);
 
         container(
             column![

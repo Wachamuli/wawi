@@ -17,9 +17,11 @@ trait PowerProfiles {
     fn performance_degraded(&self) -> zbus::Result<String>;
 }
 
-#[derive(Debug, Clone)]
+// TODO: Actually, you should default to Unknown
+#[derive(Debug, Clone, Default)]
 pub enum PowerProfile {
     PowerSaver,
+    #[default]
     Balanced,
     Performance,
     Unknown,
