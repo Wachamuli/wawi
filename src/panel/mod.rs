@@ -77,7 +77,7 @@ impl iced_layershell::Application for ControlCenter {
                 }
             },
             Message::ScreenDevice(event) => match event {
-                binding::logind::DisplayInfo::Update {
+                binding::logind::DisplayInfo::Available {
                     current_brightness,
                     max_brightness,
                     min_brightness,

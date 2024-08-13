@@ -170,7 +170,7 @@ impl DisplayBrightnessDevice {
 
 #[derive(Debug, Clone)]
 pub enum DisplayInfo {
-    Update {
+    Available {
         current_brightness: i32,
         max_brightness: i32,
         min_brightness: i32,
@@ -199,7 +199,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = DisplayInfo>
     let device = conn().await?;
     let stream = device.receive_current_brightness_changed().await;
 
-    Ok(stream.map(move |_| DisplayInfo::Update {
+    Ok(stream.map(move |_| DisplayInfo::Available {
         current_brightness: device
             .cached_current_brightness()
             .unwrap_or_default()
