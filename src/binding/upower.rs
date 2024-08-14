@@ -181,7 +181,7 @@ async fn event_stream() -> zbus::Result<impl futures::Stream<Item = BatteryInfo>
     let initial = futures::stream::iter(availability);
 
     let stream = futures::stream_select!(
-        device.receive_state_changed().await.map(|_| ()),
+        upower.receive_on_battery_changed().await.map(|_| ()),
         device.receive_percentage_changed().await.map(|_| ()),
         device.receive_time_to_empty_changed().await.map(|_| ()),
     );
