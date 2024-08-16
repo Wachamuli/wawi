@@ -3,41 +3,43 @@ mod panel;
 mod styling;
 mod widget;
 
-use iced_layershell::{
-    reexport::{Anchor, Layer},
-    Application as _,
-};
+use iced::{window, Application as _, Settings, Size};
 
-// fn main() -> Result<(), iced_layershell::Error> {
-//     panel::ControlCenter::run(iced_layershell::settings::Settings {
-//         id: Some("control_center".to_string()),
-//         antialiasing: true,
-//         default_font: styling::font::SF_PRO,
-//         layer_settings: iced_layershell::settings::LayerShellSettings {
-//             layer: Layer::Top,
-//             anchor: Anchor::Right | Anchor::Top,
-//             margins: (40 + 15, 10, 0, 0),
-//             size: Some((475, 375)),
-//             ..Default::default()
-//         },
-//         ..Default::default()
-//     })
-// }
-
-use iced::futures::StreamExt;
-
-#[tokio::main]
-async fn main() -> zbus::Result<()> {
-    let conn = zbus::Connection::session().await?;
-    let device = binding::logind::DisplayBrightnessDeviceProxy::new(&conn).await?;
-    let mut stream = device.receive_current_brightness_changed().await;
-
-    while let Some(current) = stream.next().await {
-        println!("{:?}", current.get().await);
-    }
+fn main() -> iced::Result {
+    panel::ControlCenter::run(Settings {
+        id: Some("endless".to_string()),
+        default_font: styling::font::SF_PRO,
+        antialiasing: true,
+        window: window::Settings {
+            decorations: false,
+            size: Size::new(475.0, 375.0),
+            transparent: true,
+            resizable: false,
+            level: window::Level::AlwaysOnTop,
+            position: iced::window::Position::Centered,
+            exit_on_close_request: false,
+            ..Default::default()
+        },
+        ..Default::default()
+    })?;
 
     Ok(())
 }
+
+// use iced::futures::StreamExt;
+
+// #[tokio::main]
+// async fn main() -> zbus::Result<()> {
+//     let conn = zbus::Connection::session().await?;
+//     let device = binding::logind::DisplayBrightnessDeviceProxy::new(&conn).await?;
+//     let mut stream = device.receive_current_brightness_changed().await;
+
+//     while let Some(current) = stream.next().await {
+//         println!("{:?}", current.get().await);
+//     }
+
+//     Ok(())
+// }
 
 // #[tokio::main]
 // async fn main() -> zbus::Result<()> {

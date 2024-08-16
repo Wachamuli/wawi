@@ -3,7 +3,7 @@ use crate::styling;
 
 use iced::{
     widget::{button, column, container, row, slider, svg, text},
-    Alignment, Command, Element, Length,
+    Alignment, Application, Command, Element, Length,
 };
 
 #[derive(Default)]
@@ -31,10 +31,12 @@ pub enum Message {
     SetMasterVolume(u32),
     SetBrightness(i32),
     GetBrightness(i32),
-    ToggleProfiles,
+
+    TogglePowerProfiles,
+    ToggleFanProfiles,
 }
 
-impl iced_layershell::Application for ControlCenter {
+impl Application for ControlCenter {
     type Executor = iced::executor::Default;
     type Message = Message;
     type Theme = styling::theme::Theme;
@@ -51,7 +53,7 @@ impl iced_layershell::Application for ControlCenter {
         )
     }
 
-    fn namespace(&self) -> String {
+    fn title(&self) -> String {
         "morpheus".to_string()
     }
 
@@ -87,6 +89,10 @@ impl iced_layershell::Application for ControlCenter {
                     self.min_brightness = min_brightness;
                 }
             },
+            Message::SetMasterVolume(value) => {
+                self.master_volume = value;
+                println!("Setting master volume: {value}");
+            }
             Message::SetBrightness(value) => {
                 let command = binding::logind::set_brightness(value);
                 return Command::perform(command, Message::GetBrightness);
@@ -94,13 +100,8 @@ impl iced_layershell::Application for ControlCenter {
             Message::GetBrightness(value) => {
                 self.current_brightness = value;
             }
-            Message::ToggleProfiles => {
-                println!("Toggle Profiles");
-            }
-            Message::SetMasterVolume(value) => {
-                self.master_volume = value;
-                println!("Setting master volume: {value}");
-            }
+            Message::TogglePowerProfiles => todo!("Show the power profiles menu"),
+            Message::ToggleFanProfiles => todo!("Show the fan profiles menu"),
         }
 
         Command::none()
@@ -198,13 +199,13 @@ impl iced_layershell::Application for ControlCenter {
                             "Power Mode",
                             self.active_power_profile.to_string(),
                             &power_icon,
-                            Message::ToggleProfiles
+                            Message::TogglePowerProfiles
                         ),
                         rectangular_button(
                             "Fan Profile",
                             "Silent".to_string(),
                             &fan_icon,
-                            Message::ToggleProfiles
+                            Message::ToggleFanProfiles
                         ),
                     ]
                     .spacing(10)
