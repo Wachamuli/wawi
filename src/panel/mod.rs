@@ -92,7 +92,7 @@ impl iced_layershell::Application for ControlCenter {
                 return Command::perform(command, Message::GetBrightness);
             }
             Message::GetBrightness(value) => {
-                self.current_brightness = value as i32;
+                self.current_brightness = value;
             }
             Message::ToggleProfiles => {
                 println!("Toggle Profiles");

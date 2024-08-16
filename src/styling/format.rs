@@ -5,13 +5,13 @@ pub fn seconds_to_hour_minute(seconds: i64) -> String {
     match (hours, minutes) {
         (h, _) if h > 1 => format!("{h} hours"),
         (_, m) if m > 1 => format!("{m} minutes"),
-        (1, _) => format!("1 hour"),
-        (_, 1) => format!("1 minute"),
-        _ => String::from("Less than a minute"),
+        (1, _) => "1 hour".to_string(),
+        (_, 1) => "1 minute".to_string(),
+        _ => "Less than a minute".to_string(),
     }
 }
 
-pub fn kebab_to_title_case(string: &String) -> String {
+pub fn kebab_to_title_case(string: &str) -> String {
     string
         .split("-")
         .map(|word| {

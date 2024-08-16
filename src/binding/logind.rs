@@ -67,7 +67,7 @@ impl BrightnessDevice {
 
         if let Ok(logind) = connection().await {
             let _ = logind
-                .set_brightness(&self.subsystem, &self.sysname, clamped_value)
+                .set_brightness(self.subsystem, &self.sysname, clamped_value)
                 .await;
         }
 
@@ -83,7 +83,7 @@ pub fn scan_backlights() -> io::Result<Vec<udev::Device>> {
     Ok(backlights)
 }
 
-async fn choose_brightness_device(backlights: Vec<udev::Device>) -> Option<BrightnessDevice> {
+pub async fn choose_brightness_device(backlights: Vec<udev::Device>) -> Option<BrightnessDevice> {
     let mut best_brightness_device = None;
     let mut best_brightness_value = 0;
 
@@ -106,12 +106,6 @@ async fn choose_brightness_device(backlights: Vec<udev::Device>) -> Option<Brigh
     best_brightness_device
 }
 
-pub async fn get_brightness_device() -> Option<BrightnessDevice> {
-    let backligths = scan_backlights().ok()?;
-    let brightnes_device = choose_brightness_device(backligths).await;
-    brightnes_device
-}
-
 pub struct DisplayBrightnessDevice {
     display_brightness_device: Option<BrightnessDevice>,
 }
@@ -125,11 +119,10 @@ impl DisplayBrightnessDevice {
 }
 
 #[zbus::interface(
-    name = "org.morpheus.DisplayBrightnessDevice",
+    name = "org.zbus.MyGreeter",
     proxy(
-        gen_blocking = false,
-        default_service = "org.morpheus.DisplayBrightnessDevice",
-        default_path = "/org/morpheus/DisplayBrightnessDevice",
+        default_service = "org.zbus.MyGreeter",
+        default_path = "/org/zbus/MyGreeter",
     )
 )]
 impl DisplayBrightnessDevice {
