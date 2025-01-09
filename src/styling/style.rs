@@ -27,7 +27,6 @@ impl application::StyleSheet for Theme {
 pub enum Container {
     #[default]
     Default,
-    #[allow(unused)]
     Rounded,
     HeavyRounded,
 }

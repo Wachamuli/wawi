@@ -43,18 +43,11 @@ impl Application for ControlCenter {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (
-            Self {
-                master_volume: 100,
-                on_battery: true,
-                ..Default::default()
-            },
-            Command::none(),
-        )
+        (Self::default(), Command::none())
     }
 
     fn title(&self) -> String {
-        "morpheus".to_string()
+        "morpheus".into()
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -94,11 +87,14 @@ impl Application for ControlCenter {
                 println!("Setting master volume: {value}");
             }
             Message::SetBrightness(value) => {
+                self.current_brightness = value;
                 let command = binding::logind::set_brightness(value);
                 return Command::perform(command, Message::GetBrightness);
             }
+            // Unnecessary!?
             Message::GetBrightness(value) => {
                 self.current_brightness = value;
+                println!("Setting brightness : {}", self.current_brightness);
             }
             Message::TogglePowerProfiles => todo!("Show the power profiles menu"),
             Message::ToggleFanProfiles => todo!("Show the fan profiles menu"),
@@ -209,7 +205,7 @@ impl Application for ControlCenter {
                         ),
                     ]
                     .spacing(10)
-                )
+                ),
             ]
             .spacing(20),
         )

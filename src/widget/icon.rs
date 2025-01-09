@@ -10,3 +10,5 @@ pub fn icon(bytes: &'static [u8]) -> Svg<styling::theme::Theme> {
         .width(ICON_SIZE)
         .height(ICON_SIZE)
 }
+
+

@@ -43,7 +43,7 @@ impl BrightnessDevice {
         })
     }
 
-    pub async fn brightness(&self) -> io::Result<u32> {
+    pub async fn current_brightness(&self) -> io::Result<u32> {
         let path = format!("/sys/class/backlight/{}/brightness", &self.sysname);
         let value = tokio::fs::read_to_string(&path).await?;
         let brightness: u32 = value
@@ -131,7 +131,7 @@ impl DisplayBrightnessDevice {
         let Some(brightness_device) = &self.display_brightness_device else {
             return -1;
         };
-        let Ok(current_brightness) = brightness_device.brightness().await else {
+        let Ok(current_brightness) = brightness_device.current_brightness().await else {
             return -1;
         };
 

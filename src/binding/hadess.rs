@@ -9,21 +9,16 @@ trait PowerProfiles {
     #[zbus(property)]
     fn active_profile(&self) -> zbus::Result<String>;
 
-    // Not very useful, the data is given in a dynamic dict.
-    #[zbus(property)]
-    fn profiles(&self) -> zbus::Result<Vec<std::collections::HashMap<String, String>>>;
-
     #[zbus(property)]
     fn performance_degraded(&self) -> zbus::Result<String>;
 }
 
-// TODO: Actually, you should default to Unknown
 #[derive(Debug, Clone, Default)]
 pub enum PowerProfile {
     PowerSaver,
-    #[default]
     Balanced,
     Performance,
+    #[default]
     Unknown,
 }
 
